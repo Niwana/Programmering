@@ -4,7 +4,7 @@ import Data.List
 import Data.Char
 
 {- Upplägg:
-Inledningen: man skapar en profil som läggs till i db.
+Inledningen: man skapar en profil som läggs till i databasen.
 Meny: Gå igenom de fem alternativen.
 Alternativ 5: Best Match: ange kritierier. 
 Välja vem man vill chatta med
