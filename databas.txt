@@ -1,0 +1,5 @@
+Hans 19 160 Stockholm Action
+Lars 22 150 Gothenburg Action
+Mats 20 170 Stockholm Romance
+Martin 21 173 Falun Action
+Hans 46 180 Gothenburg Romance
