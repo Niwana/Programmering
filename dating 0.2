@@ -1,0 +1,228 @@
+import System.IO  
+import System.Directory  
+import Data.List
+import Data.Char
+
+{- Upplägg:
+Inledningen: man skapar en profil som läggs till i db.
+Meny: Gå igenom de fem alternativen.
+Alternativ 5: Best Match: ange kritierier. 
+Välja vem man vill chatta med
+Starta chatt
+(Kunna avsluta chatt)
+
+Fixa:
+Delete person: kommer ej tillbaka till menyn om man inte skriver in en siffra.
+Search database: Måste komma på ett sätt att filtrera ålder och längd
+Perfect match: ange kriterier --> filtrera listan.
+-}
+
+-- Deklarer data         
+data Person = Person { 
+     personName :: String,
+     personAge :: Int,
+     personLength :: Int,
+     personLocation :: String,
+     personGenre :: String
+}
+        deriving Show
+
+
+-- Körs när programmed startar        
+main = do
+    putStrLn "\n Welcome to DERP, the most advanced dating program ever made!"
+    putStrLn "Please provide us with some information about yourself \n"
+    
+    intro
+    
+    
+-- Kör funktionen för att samla information om användaren        
+intro = do    
+    putStrLn "To start with, what is your name?"
+    name <- getLine
+    
+    putStrLn "\n Your age?"
+    age <- getLine
+
+    putStrLn "\n Your length?"
+    length <- getLine
+    
+    putStrLn "\n Where do you live?"
+    city <- getLine
+    
+    putStrLn "\n And last, your favorite genre?"
+    genre <- getLine
+    
+    if (name  == "" ||  age == "" ||  length == "" || city == "" || genre == "")
+        then do putStrLn "Hold on! I think you missed something! Please try again... \n"
+                intro
+        else do 
+            putStrLn $ "\n Excellent " ++ name ++ ". Welcome to DERP! \n"
+            appendFile "databas.txt" ("\n" ++ name ++ " " ++ age ++ " " ++ 
+                                      length ++ " " ++ city ++ " " ++ genre)
+            menu    
+            
+            
+-- Menyn med diverse alternativ.    
+menu = do
+    putStrLn "\n Choose one of the following options: \n"
+    putStrLn "1) Display the database"
+    putStrLn "2) Search in the database"
+    putStrLn "3) Add a person"
+    putStrLn "4) Delete a person"
+    putStrLn "5) Find your perfect match"
+    
+    opt <- getLine
+    let option = read opt
+    
+    if (option == 1)
+        then displayDatabase
+        else if (option == 2)
+            then searchDatabase
+            else if (option == 3)
+            then addPerson
+            else if (option == 4)
+                then deletePerson
+                else if (option == 5)
+                    then perfectMatch
+                    else return ()
+                    
+                    
+-- Visa hela databasen.        
+displayDatabase = do
+    putStrLn "\n Here is the datebase:"
+    datab <- readFile $ "databas.txt" 
+    putStrLn $ datab
+    menu
+
+  
+-- Sök efter personer utefter namn, ålder, längd, stad och filmgenre
+searchDatabase = do
+    putStrLn "\n Choos a category to search for:"
+    putStrLn "1) Name"
+    putStrLn "2) Age"
+    putStrLn "3) Length"
+    putStrLn "4) City"
+    putStrLn "5) Favorite film genre"
+    
+    opt <- getLine
+    let option = read opt
+    
+    if (option == 1)
+        then searchName
+        else if (option == 2)
+            then searchAge
+            else if (option == 3)
+            then searchLength
+            else if (option == 4)
+                then searchCity
+                else if (option == 5)
+                    then searchGenre
+                    else return ()    
+
+                    
+personToString :: Person -> String
+personToString (Person name age length city genre) = name ++ " " ++ show age ++ " " ++ 
+                                                     show length ++ " " ++ city ++ " " ++ genre 
+parse :: String -> [Person]
+parse txt = let rows = map words (lines txt)
+            in map (\[name, age, length, city, genre] -> Person name (read age) (read length) city genre) rows
+
+-- Sök efter alla med ett visst namn                                                     
+searchName = do
+    putStrLn "\n Please type the name of the person you're looking for"
+    namn <- getLine
+    input <- readFile $ "databas.txt"
+    let people = parse input
+        output = map personToString (filter (\p -> personName p == namn) people)
+        in putStrLn (unlines output)
+    
+searchAge = do
+    return()
+
+searchLength = do
+    return()
+  
+searchCity = do
+    putStrLn "\n Please type the name of the city you're looking for"
+    city <- getLine
+    input <- readFile $ "databas.txt"
+    let people = parse input
+        output = map personToString (filter (\p -> personLocation p == city) people)
+        in putStrLn (unlines output)
+
+    
+searchGenre = do
+    putStrLn "\n Please type the name of the city you're looking for"
+    genre <- getLine
+    input <- readFile $ "databas.txt"
+    let people = parse input
+        output = map personToString (filter (\p -> personGenre p == genre) people)
+        in putStrLn (unlines output)
+
+    
+-- Lägger till en person till databasen.
+addPerson = do    
+    putStrLn "\n Please enter the name of the person:"
+    name <- getLine
+    
+    putStrLn "\n The age"
+    age <- getLine
+
+    putStrLn "\n The length"
+    length <- getLine
+    
+    putStrLn "\n Where they live"
+    city <- getLine
+    
+    putStrLn "\n And last, their favorite film genre"
+    genre <- getLine
+    
+    if (name  == "" ||  age == "" ||  length == "" || city == "" || genre == "")
+        then do putStrLn "Hold on! I think you missed something! Please try again... \n"
+                intro
+        else do 
+            appendFile "databas.txt" ("\n" ++ name ++ " " ++ age ++ " " ++ 
+                                      length ++ " " ++ city ++ " " ++ genre)
+            menu 
+            
+            
+-- Funktionen tar bort en person ur databasen
+deletePerson = do
+    -- Öppna originalfilen och skapa en temporär fil. "." = filens sökväg, "temp" = namnet på den temporära filen.
+    handle <- openFile "databas.txt" ReadMode  
+    (tempName, tempHandle) <- openTempFile "." "temp"  
+    
+    -- Hämtar all text från handle (som är inputfilen) och tilldelar innehållet till contents.
+    -- Contents görs om till en lista med strings via "lines" som sedan sätts samman med respektive siffra via zipWidth
+    contents <- hGetContents handle
+    let person = lines contents     
+        numberedTasks = zipWith (\n line -> show n ++ ") " ++ line) [0..] person     
+    
+    putStrLn "Here is the database: "  
+    putStrLn $ unlines numberedTasks  
+    
+    -- Tar bort pesonen ur listan på den rad som användaren anger. Omvandlar sedan tillbaka listan till strings
+    putStrLn "Which one do you want to delete? Press enter if you are done"     
+    option <- getLine     
+    let newPerson = delete (person !! read option) person     
+    hPutStr tempHandle $ unlines newPerson  
+    
+    -- Sedan stängs båda filerna och den gamla filen tas bort samtidigt som den temporära filen byter namn.
+    hClose handle  
+    hClose tempHandle  
+    removeFile "databas.txt"  
+    renameFile tempName "databas.txt"
+    
+    -- Om användaren lämnar ett blankt fält så återgår man till menyn, annars så fortsätter man att ta bort kontakter.
+    if (option /= "")
+        then do deletePerson
+        else do menu
+        
+
+        
+-- Hitta en perfekt matchning
+perfectMatch = do
+        return()
+    
+    
