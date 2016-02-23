@@ -1,0 +1,30 @@
+searchDatabase = do
+     putStrLn "\n Choose a category to search for:"
+     putStrLn "1) Name"
+     putStrLn "2) Age"
+     putStrLn "3) Length"
+     putStrLn "4) City"
+     putStrLn "5) Favorite film genre"
+     
+     opt <- getLine
+     let option = read opt
+     
+     if (option /= [0..])
+        then do putStrLn "\n Sorry, that's not an option. Try again with a number 1-5"  
+                searchDatabase
+        else do
+            if (option >0 && option <= 5)
+                then
+                    if (option == 1)
+                        then searchName
+                        else if (option == 2)
+                            then searchAge
+                            else if (option == 3)
+                                then searchLength
+                                else if (option == 4)
+                                    then searchCity
+                                    else if (option == 5)
+                                        then searchGenre
+                                        else return ()
+                else do putStrLn "\n Sorry, that's not an option. Try again with a number 1-5"  
+                        searchDatabase
