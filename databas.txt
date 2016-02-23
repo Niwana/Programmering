@@ -3,3 +3,23 @@ Lars 22 150 Gothenburg Action
 Mats 20 170 Stockholm Romance
 Martin 21 173 Falun Action
 Hans 46 180 Gothenburg Romance
+Johan 32 177 Gothenburg Action
+Martin 21 179 Gothenburg Action
+Super 35 150 Rome Comedy
+Lisa 25 175 Gothenburg Action
+Eric 24 180 Malmoe Fantasy
+M†ns 28 178 Lund Romance
+Josef 27 179 Boras Adventure
+Anders 29 180 Gothenburg Action
+Jessica 35 182 Gothenburg Comedy
+Lasse 34 185 Boras Action
+Johan 33 175 Gothenburg Romance
+Lisa 18 170 Boras Comedy
+Rudolf 40 180 Lund Action
+Julia 20 170 Gothenburg Comedy
+Stina 20 170 Boras Comedy
+Linda 18 167 Gothenburg Comedy
+Rebecka 20 165 Gothenburg Comedy
+Johanna 20 170 Gothenburg Comedy
+Linus 25 178 Gothenburg Comedy
+Robin 25 192 Gothenburg Action
