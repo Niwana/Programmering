@@ -19,6 +19,7 @@ import Data.List.Split
  Search database: Söker endast i den ursprungliga databasen. Blir fel om man skriver in något som inte finns.
  Perfect match: ange kriterier --> filtrera listan.
  Ändra words-funktionen så att den delar in ord efter comma istället för mellanslag.
+ Om man skriver in en bokstav i deleteperson så behövs en annan form av error.
  -}
  
  -- Deklarer data         
@@ -88,26 +89,23 @@ menu = do
                         then read opt
                         else 9                  -- Hur kan man lösa detta på ett snyggare sätt? 
     
-    if (elem option [0..])
-        then 
-            if (option > 0 && option <= 6)
-            then
-                if (option == 1)
-                then displayDatabase
-                    else if (option == 2)
-                    then searchDatabase
-                        else if (option == 3)
-                        then addPerson
-                            else if (option == 4)
-                            then deletePerson
-                                else if (option == 5)
-                                then perfectMatch
-                                    else if (option == 6)
+    if (option >0 && option <= 6)
+        then
+            if (option == 1)
+            then displayDatabase
+                else if (option == 2)
+                then searchDatabase
+                    else if (option == 3)
+                    then addPerson
+                        else if (option == 4)
+                        then deletePerson
+                            else if (option == 5)
+                            then perfectMatch
+                                else if (option == 6)
                                     then startChatt
-                                        else return ()
-                else do putStrLn "\n Sorry, that's not an option. Try again with a number 1-6!"  
-                        menu
-        else putStrLn "error"
+                                    else return ()
+        else do putStrLn "\n Sorry, that's not an option. Try again with a number 1-6!"  
+                menu
      
 
  -- Visa hela databasen.        
@@ -118,9 +116,7 @@ displayDatabase = do
     menu
  
    
- -- Sök efter personer utefter namn, ålder, längd, stad och filmgenre
-
- 
+ -- Sök efter personer utefter namn, ålder, längd, stad och filmgenre 
 searchDatabase = do
     putStrLn "\n Choose a category to search for:"
     putStrLn "1) Name"
@@ -128,30 +124,30 @@ searchDatabase = do
     putStrLn "3) Length"
     putStrLn "4) City"
     putStrLn "5) Favorite film genre"
+    putStrLn "6) Go back to main menu"
      
     opt <- getLine
     let option = if (checkDigits opt == True)
                         then read opt
                         else 9
     
-    if (elem option [0..])
-        then
-            if (option > 0 && option <= 5)
-            then
-                if (option == 1)
-                then searchName
-                    else if (option == 2)
-                    then searchAge
-                        else if (option == 3)
-                        then searchLength
-                            else if (option == 4)
-                            then searchCity
-                                else if (option == 5)
-                                then searchGenre
-                                    else return ()
-            else do putStrLn "\n Sorry, that's not an option. Try again with a number 1-5"  
-                    searchDatabase
-        else putStrLn "error"            
+    if (option >0 && option <= 6)
+                then
+                    if (option == 1)
+                        then searchName
+                        else if (option == 2)
+                            then searchAge
+                            else if (option == 3)
+                                then searchLength
+                                else if (option == 4)
+                                    then searchCity
+                                    else if (option == 5)
+                                        then searchGenre
+                                        else if (option == 6)
+                                            then menu
+                                            else return ()
+                else do putStrLn "\n Sorry, that's not an option. Try again with a number 1-5"  
+                        searchDatabase         
  
                     
 personToString :: Person -> String
@@ -171,10 +167,24 @@ searchName = do
         output = map personToString (filter (\p -> personName p == namn) people)
         in putStrLn (unlines output)
         
+    putStrLn "Let's get back to the search menu again!"  
+    searchDatabase
+ 
+ 
 -- Sök efter alla med en viss ålder     
 searchAge = do
-    return()
+    putStrLn "\n Please type the age interval of the person you're looking for: \n"
+    age <- getLine
+    input <- readFile $ "databas.txt"
+    putStrLn "\n Here are all the people that matches your search: \n"
+    let people = parse input
+        output = map personToString (filter (\p -> personAge p == read age) people)
+        in putStrLn (unlines output)
+    
+    putStrLn "Let's get back to the search menu again!"     
+    searchDatabase
 
+    
 -- Sök efter alla med en viss längd         
 searchLength = do
     putStrLn "\n Please type the length interval of the person you're looking for:"
@@ -183,8 +193,12 @@ searchLength = do
     let people = parse input
         output = map personToString (filter (\p -> personLength p == read length) people)
         in putStrLn (unlines output)
+    
+    putStrLn "Let's get back to the search menu again!"  
+    searchDatabase
 
--- Sök efter alla som bor i en viss stad         
+    
+    -- Sök efter alla som bor i en viss stad         
 searchCity = do
     putStrLn "\n Please type the name of the city you're looking for:"
     city <- getLine
@@ -192,7 +206,11 @@ searchCity = do
     let people = parse input
         output = map personToString (filter (\p -> personLocation p == city) people)
         in putStrLn (unlines output)
- 
+     
+    putStrLn "Let's get back to the search menu again!"  
+    searchDatabase
+
+     
 -- Sök efter alla som har en viss favoritgenre    
 searchGenre = do
     putStrLn "\n Please type the name of the genre you're looking for:"
@@ -201,8 +219,12 @@ searchGenre = do
     let people = parse input
         output = map personToString (filter (\p -> personGenre p == genre) people)
         in putStrLn (unlines output)
- 
-     
+    
+    
+    putStrLn "Let's get back to the search menu again!"  
+    searchDatabase
+    
+    
  -- Lägger till en person till databasen.
 addPerson = do    
     putStrLn "\n Please enter the name of the person:"
@@ -247,7 +269,9 @@ deletePerson = do
     -- Tar bort pesonen ur listan på den rad som användaren anger. Omvandlar sedan tillbaka listan till strings
     putStrLn "Which one do you want to delete? Press enter if you are done"     
     option <- getLine     
-    let newPerson = delete (person !! read option) person     
+    let newPerson = if (checkDigits option == True)
+                        then delete (person !! read option) person
+                        else person
     hPutStr tempHandle $ unlines newPerson  
      
     -- Sedan stängs båda filerna och den gamla filen tas bort samtidigt som den temporära filen byter namn.
