@@ -62,8 +62,8 @@ intro = do
                 intro
         else do 
             putStrLn $ "\n Excellent " ++ name ++ ". Welcome to DERP! \n"
-            appendFile "databas.txt" ("\n" ++ name ++ " " ++ age ++ " " ++ 
-                                      length ++ " " ++ city ++ " " ++ genre)
+            appendFile "databas.txt" ("\n" ++ name ++ "," ++ age ++ "," ++ 
+                                      length ++ "," ++ city ++ "," ++ genre)
             menu    
 
 
@@ -224,8 +224,8 @@ addPerson = do
         then do putStrLn "Hold on! I think you missed something! Please try again... \n"
                 addPerson
         else do 
-            appendFile "databas.txt" ("\n" ++ name ++ " " ++ age ++ " " ++ 
-                                      length ++ " " ++ city ++ " " ++ genre)
+            appendFile "databas.txt" ("\n" ++ name ++ "," ++ age ++ "," ++ 
+                                      length ++ "," ++ city ++ "," ++ genre)
             menu 
              
              
