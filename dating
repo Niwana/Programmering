@@ -174,11 +174,15 @@ searchName = do
 -- Sök efter alla med en viss ålder     
 searchAge = do
     putStrLn "\n Please type the age interval of the person you're looking for: \n"
-    age <- getLine
+    minAge <- getLine
+    maxAge <- getLine
+    
+    let ageList = [(read minAge::Int)..(read maxAge::Int)]
+    
     input <- readFile $ "databas.txt"
     putStrLn "\n Here are all the people that matches your search: \n"
     let people = parse input
-        output = map personToString (filter (\p -> personAge p == read age) people)
+        output = map personToString (filter (\p -> (elem (personAge p) ageList)) people)
         in putStrLn (unlines output)
     
     putStrLn "Let's get back to the search menu again!"     
