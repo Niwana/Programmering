@@ -19,7 +19,14 @@ Rudolf,40,180,Lund,Action
 Julia,20,170,Gothenburg,Comedy
 Stina,20,170,Boras,Comedy
 Linda,18,167,Gothenburg,Comedy
-Rebecka,20,165,Gothenburg,Comedy
+Rebecka,20,165,Gothenburg,Fantasy
 Johanna,20,170,Gothenburg,Comedy
 Linus,25,178,Gothenburg,Comedy
 Robin,25,192,Gothenburg,Action
+Mange,12,150,Stockholm,Action
+Frasse,33,160,Stockholm,Drama
+Peppe,44,210,Halmstad,Fantasy
+Greger,99,130,Flen,Thriller
+Flavender,75,190,Stockholm,Horror
+Yåkinänän,19,178,Hamburg,Documentary
+Anton,26,181.5,Halmstad,Fantasy
