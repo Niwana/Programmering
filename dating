@@ -3,23 +3,32 @@ import System.Directory
 import Data.List
 import Data.Char
 import Data.List.Split
+import Prelude hiding (catch)
+import System.IO
+import System.IO.Error hiding (catch) 
+import System.Directory  
+import Test.QuickCheck
+import Data.List
+import Data.Char
+import Data.List.Split (splitOn)  
+import qualified Data.Text as T
+import Control.Exception
 
 -- OBS! Senaste versionen.
  
- {- Upplägg:
- Inledningen: man skapar en profil som läggs till i databasen.
- Meny: Gå igenom de fem alternativen.
- Välja vem man vill chatta med.
- Starta chatt.
- (Kunna avsluta chatt)
+{- Upplägg:
+Inledningen: man skapar en profil som läggs till i databasen.
+Meny: Gå igenom de fem alternativen.
+Väa vem man vill chatta med.
+Starta chatt.
+(Kunna avsluta chatt)
  
- Fixa:
- Add person: ibland läggs en tom rad till i listan, vilket gör att search funktionen sen 
- inte fungerar ordentligt om man inte går bort och tar bort den först i deletePerson.
- Delete person: Fixa så programmet inte kraschar om man skriver en siffra som är större än längden på listan.
- ((Ev ta bort: Perfect match: ange kriterier --> filtrera listan.))
-perfectMatch måste skriva ut namnet på personen.
- -}
+Fixa:
+Add person: ibland läggs en tom rad till i listan, vilket gör att search funktionen sen 
+inte fungerar ordentligt om man inte går bort och tar bort den först i deletePerson.
+Delete person: Fixa så programmet inte kraschar om man skriver en siffra som är större än längden på listan.
+((Ev ta bort: Perfect match: ange kriterier --> filtrera listan.))
+-}
  
  -- Deklarer data         
 data Person = Person { 
@@ -67,7 +76,7 @@ intro = do
             menu    
 
 
--- Ser efter om en lista innehåller bara Ints. Retunerar isåfall True            
+-- Ser efter om en lista innehåller bara Ints. Retunerar isäfall True            
 checkDigits :: [Char] -> Bool            
 checkDigits [] = False
 checkDigits [x] = isDigit x
@@ -101,7 +110,7 @@ menu = do
                                 else if (option == 5)
                                 then perfectMatch
                                     else if (option == 6)
-                                    then startChatt
+                                    then startChat
                                         else return ()
                 else do putStrLn "\n Sorry, that's not an option. Try again with a number 1-6!"  
                         menu
@@ -117,8 +126,6 @@ displayDatabase = do
  
    
  -- Sök efter personer utefter namn, ålder, längd, stad och filmgenre
-
- 
 searchDatabase = do
     putStrLn "\nChoose a category to search for:"
     putStrLn "1) Name"
@@ -160,7 +167,9 @@ personToString (Person name age length city genre) = name ++ "," ++ show age ++ 
 parse :: String -> [Person]
 parse txt = let rows = map (splitOn ",") (lines txt)
              in map (\[name, age, length, city, genre] -> Person name (read age) (read length) city genre) rows
- 
+
+bigLetter [] = []
+bigLetter (x:xs) = [toUpper x] ++ xs             
  -- Sök efter alla med ett visst namn                                                     
 searchName = do
     putStrLn "\n Type the name of the person you're looking for: \n"
@@ -168,7 +177,7 @@ searchName = do
     input <- readFile $ "databas.txt"
     putStrLn "\n Here are all the people that matches your search: \n"
     let people = parse input
-        output = map personToString (filter (\p -> personName p == namn) people)
+        output = map personToString (filter (\p -> personName p == (bigLetter namn)) people)
 
     if null output
         then do putStrLn "Just kidding, no matches. Try another name!"
@@ -213,7 +222,7 @@ searchLength = do
                     else []
     
     input <- readFile $ "databas.txt"
-    putStrLn "\nHere are all the people that matches your search: \n"
+    putStrLn "\n Here are all the people that matches your search: \n"
     let people = parse input
         output = map personToString (filter (\p -> (elem (personLength p) lengthList)) people)
  
@@ -228,12 +237,12 @@ searchLength = do
 
 -- Sök efter alla som bor i en viss stad         
 searchCity = do
-    putStrLn "\nType the name of the city you're looking for: \n"
+    putStrLn "\n Type the name of the city you're looking for: \n"
     city <- getLine
     input <- readFile $ "databas.txt"
-    putStrLn "\nHere are all the people that matches your search: \n"
+    putStrLn "\n Here are all the people that matches your search: \n"
     let people = parse input
-        output = map personToString (filter (\p -> personLocation p == city) people)
+        output = map personToString (filter (\p -> personLocation p == (bigLetter city)) people)
          
     if null output
         then do putStrLn "Just kidding, no matches. Try another city!"
@@ -242,15 +251,16 @@ searchCity = do
                 putStrLn "Let's get back to the search menu again!"
                 searchDatabase         
  
-     
+ 
 -- Sök efter alla som har en viss favoritgenre    
 searchGenre = do
-    putStrLn "\nType the name of the genre you're looking for: \n"
+    putStrLn "\n Type the name of the genre you're looking for: \n"
     genre <- getLine
+
     input <- readFile $ "databas.txt"
-    putStrLn "\nHere are all the people that matches your search: \n"
+    putStrLn "\n Here are all the people that matches your search: \n"
     let people = parse input
-        output = map personToString (filter (\p -> personGenre p == genre) people)
+        output = map personToString (filter (\p -> personGenre p == (bigLetter genre)) people)
 
     if null output
         then do putStrLn "Just kidding, no matches. Try another genre!"
@@ -288,7 +298,7 @@ addPerson = do
              
  -- Funktionen tar bort en person ur databasen
 deletePerson = do
-    handle <- openFile "databas.txt" ReadMode           -- Öppna originalfilen och skapa en temporär fil. "." = filens sökväg, "temp" = namnet på den temporära filen.
+    handle <- openFile "databas.txt" ReadMode           -- öppna originalfilen och skapa en temporär fil. "." = filens sökvä "temp" = namnet på den temporära filen.
     (tempName, tempHandle) <- openTempFile "." "temp"  
     
     contents <- hGetContents handle             -- Hämtar all text från handle (som är inputfilen) och tilldelar innehållet till contents.
@@ -333,43 +343,111 @@ perfectMatch = do
     putStrLn "\n Now choose the desired city."
     city <- getLine
     
+    putStrLn "\n And last the genre!"
+    genre <- getLine
+    
     input <- readFile $ "databas.txt"
     let people = parse input
-        output = map personToString (filter (\p -> personLocation p == city) (filter (\p -> (elem (personAge p) ageList)) people))
-        
-               {- if (city == "" && minAge == "" && maxAge == "")
-                    then map personToString people
-                    else if (city == "") -- Om någon parameter lämnas tom så ska de inte filtreras bort.
-                        then map personToString (filter (\p -> (elem (personAge p) ageList)) people)
-                        else if (minAge == "")
-                            then map personToString (filter (\p -> personAge p <= read maxAge) people)
-                            else if (maxAge == "")
-                                then map personToString (filter (\p -> personAge p >= read minAge) people)
-                                else map personToString (filter (\p -> personLocation p == city) (filter (\p -> (elem (personAge p) ageList)) people))
-                -}
-    -- Kanske man borde göra en ny fil så man kan använda en annan do-funktion för att
-    -- Skriva ut den lista varvid man har olika alternativ.
-    let numberedPersons = zipWith (\n line -> show n ++ ") " ++ line) [0..] output
+        output = map personToString (filter (\p -> personGenre p == (bigLetter genre) || (bigLetter genre) == "") (filter (\p -> personLocation p == (bigLetter city) || (bigLetter city) == "") (filter (\p -> (elem (personAge p) ageList || ageList == [])) people)))
+
+    let numberedPersons = zipWith (\n line -> show n ++ ") " ++ line) [0..] output    -- Skriva ut den lista varvid man har olika alternativ.
     
     if null output
-        then do putStrLn "\n Just kidding, again! Don't leave a field empty or you will never find your true love!"
+        then do putStrLn "\nJust kidding, again! Don't leave a field empty or you will never find your true love!"
                 perfectMatch
-        else do putStrLn "\n Here is your perfect matches:"
+        else do putStrLn "\nHere is your perfect matches:"
                 putStrLn (unlines numberedPersons)
                 
                 putStrLn "Which person do you want to start talking to? \n"
                 option <- getLine
                 
-
-                -- 9) Robin,25,192,Gothenburg,Action
                 if ((checkDigits option == True) && (elem (option ++ ")") ( words ( unlines numberedPersons)) == True))
-                    then putStrLn ((words ((splitOn "," (numberedPersons !! read option)) !! 0) !! 1) :: String)
+                    then do putStrLn ("Starting a chat with " ++ (words (unwords (splitOn "," (numberedPersons !! read option))) !! 1) ++ ". Good luck! ;)")
+                            startChat
                     else do putStrLn "\n Please try again with a number from the list!"
                             perfectMatch
 
                 
--- Välja person att börja chatta med
-startChatt = do    
+-- Chattfunktionen
+isConsonant = "qwrtpsdfghjklzxcvbnmQWRTPSDFGHJKLZXCVNM" 
+versal = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+
+isIn :: (Eq a) => [a] -> [a] -> Bool
+n `isIn` h = any (n `isPrefixOf`) (tails h)
+  
+perify :: [Char] -> [Char]
+perify xs
+        | (head (xs)) == 'P' = ", " ++ xs
+        | (head (xs)) `notElem` isConsonant = ", P" ++ [(toLower (head (xs)))] ++ (tail (xs))
+        | otherwise = ", P" ++ (tail (xs))
+        
+positivt :: [Char] -> Bool
+positivt xs
+    | "ja " `isIn` xs = True
+    | "Ja " `isIn` xs = True
+    | "jo " `isIn` xs = True
+    | "Jo " `isIn` xs = True
+    | "mja " `isIn` xs = True
+    | "Mja " `isIn` xs = True
+    | otherwise = False
     
-    name <- getLine
-    putStrLn $ "\n Ok, starting chat with " ++ name ++ ", have fun! \n"
+leaveChat :: [Char] -> Bool  
+leaveChat xs
+    | "hejdå " `isIn` zs = True
+    | "bye " `isIn` zs = True
+    | "leave " `isIn` zs = True
+    | "turn off " `isIn` zs = True
+    | "shut down " `isIn` zs = True
+    | otherwise = False
+     where zs = (filter (/=',') (filter (/='!') xs) ++ " ")
+     
+removeIfExists :: FilePath -> IO ()
+removeIfExists fileName = removeFile fileName `catch` handleExists
+  where handleExists e
+          | isDoesNotExistError e = return ()
+          | otherwise = throwIO e    
+    
+startChat = do              
+            removeIfExists ("name.temp")
+            removeIfExists ("stad.temp")
+            appendFile "name.temp" ("")
+            appendFile "stad.temp" ("")
+            print ("\nHej, vad heter du?")
+            sname <- getLine
+            let name = takeWhile (/=' ') (dropWhile (not.isUpper)(filter (/=',') sname))
+            appendFile "name.temp" (name)
+            if ((not.leaveChat) name) 
+                then print ("Hejsan " ++ name ++ 
+                    (if ('?' `elem` sname) 
+                        then ", jag heter" 
+                        else "!")) >> do bor
+                else do slut 
+            
+bor = do 
+            namnet <- readFile "name.temp"
+            print "\nVar bor du?"
+            place <- getLine
+            if ((not.leaveChat) place) 
+                then  print ("Jaha " ++ namnet ++ (perify (namnet)) ++ 
+                             ", Piron, Paron, " ++ place ++ "... kul...") >> do svett 
+                else do slut
+                  
+svett = do
+            print ("\nHar du svettiga sockar?")
+            svar <- getLine
+            if ((not.leaveChat) svar) 
+                then 
+                    (if positivt ((filter (/=',') (filter (/='!') svar) ++ " ")) 
+                        then print ("byt strumpor!") 
+                        else print ("rena strumpor, inga strumpor, lika bra...")>> do avslut)
+                else do slut
+            
+avslut = do
+            namnet <- readFile "name.temp"
+            print ("Jag ska kila nu " ++ namnet ++ ", kul att snacka med dig.")
+            bye <- getLine
+            
+            slut
+
+slut = do
+            print ("Bye! :)")
