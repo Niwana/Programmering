@@ -15,7 +15,7 @@ import qualified Data.Text as T
 import Control.Exception
 import Control.Monad
 
--- OBS! Senaste versionen.
+-- Verision 2016-03-01
  
 {- Upplägg:
 Inledningen: man skapar en profil som läggs till i databasen.
@@ -468,14 +468,14 @@ startChat = do
             appendFile "name.temp" ("")
             appendFile "stad.temp" ("")
             chatfriend <- readFile "chatWith.temp"
-            print ("Hej, vad heter du?")
+            print ("Hello, what's your name?")
             sname <- getLine
             let name = takeWhile (/=' ') (dropWhile (not.isUpper)(filter (/=',') sname))
             appendFile "name.temp" (name)
             if ((not.leaveChat) name) 
-                then print ("Hejsan " ++ name ++ 
+                then print ("Hi there " ++ name ++ "! " ++ 
                     (if ('?' `elem` sname) 
-                        then ", jag heter " ++ chatfriend
+                        then ", my name is " ++ chatfriend
                         else "!")) >> do bor
                 else do slut 
             
@@ -506,7 +506,24 @@ avslut = do
 
 slut = do
             print ("Bye! :)")
+            
+-- movie = do  putStrLn ("What's your favorite movie?")
+--            film <- getLine
+--            putStrLn ("Oh thats a great one! Have you seen the latest Hunger Games movie?")
+--            svar <- getLine
+--            if svar == "yes" then putStrLn ("Me too, I really liked it, did you?") else  putStrLn ("You should, it was great!")
+--            svar <- getLine
+--            if svar == "yes" then putStrLn ("I thought so!") else putStrLn ("Hm...")
 
-
-
-
+ {-   putStrLn ("Btw, where do you live?")
+    place <- getLine
+    putStrLn ("Oh really, I live in " ++ place ++ " too!")
+    putStrLn ("Lets switch to swedish?")
+    svar <- getLine
+    if svar == "yes" || svar == "ja" || svar == "visst" then putStrLn ("Kanon, då gör vi det!") else putStrLn ("Varför? Jag snackar hellre på svenska..")
+    putStrLn ("Vill du hitta på något i helgen " ++ name ++ "?")
+    svar <- getLine
+    if svar == "ja" || svar == "ja visst" || svar == "absolut" then putStrLn ("Vad kul Emoji smile Jag måste dra nu men vi snackar mer senare!") else putStrLn ("Okej en annan gång då kanske. Nu måste jag dra!")
+    hejdå <- getLine
+    putStrLn ("Ha det gött, hejdå!")
+    -}
