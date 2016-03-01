@@ -15,7 +15,7 @@ import qualified Data.Text as T
 import Control.Exception
 import Control.Monad
 
--- Verision 2016-03-01
+-- Version 2016-03-01 - Martin
  
 {- Upplägg:
 Inledningen: man skapar en profil som läggs till i databasen.
@@ -26,6 +26,7 @@ Kunna avsluta chatt och gå tillbaka till startmenyn.
  
 Fixa:
 Göra klart chattdelen
+Chatta på en gång från menyn. Välja en person?
 -}
  
  -- Deklarera data         
@@ -115,7 +116,7 @@ menu = do
 
      
 
- -- Visa hela databasen.        
+-- Visa hela databasen.        
 displayDatabase = do
     putStrLn "\nHere is the database: \n"
     datab <- readFile $ "databas.txt" 
@@ -123,7 +124,7 @@ displayDatabase = do
     menu
  
    
- -- Sök efter personer utefter namn, ålder, längd, stad och filmgenre
+-- Sök efter personer utefter namn, ålder, längd, stad och filmgenre
 searchDatabase = do
     putStrLn "\nChoose a category to search for:"
     putStrLn "1) Name"
@@ -169,7 +170,7 @@ parse txt = let rows = map (splitOn ",") (lines txt)
 bigLetter [] = []
 bigLetter (x:xs) = [toUpper x] ++ xs  
            
- -- Sök efter alla med ett visst namn                                                     
+-- Sök efter alla med ett visst namn                                                     
 searchName = do
     putStrLn "\nType the name of the person you're looking for: \n"
     namn <- getLine
@@ -184,7 +185,8 @@ searchName = do
         else do putStrLn (unlines output)
                 putStrLn "Let's get back to the search menu again!"
                 searchDatabase
-        
+ 
+ 
 -- Sök efter alla med en viss ålder     
 searchAge = do
     putStrLn "\nYou can search by an age interval. Type the minimum age: \n"
@@ -225,8 +227,7 @@ searchLength = do
     let people = parse input
         output = map personToString (filter (\p -> (elem (personLength p) lengthList)) people)
  
--- kollar om listan är tom 
-    if null output
+    if null output          -- kollar om listan är tom 
         then do putStrLn "Just kidding, no matches. Try another interval!"
                 searchLength
         else do putStrLn (unlines output)
@@ -372,56 +373,15 @@ perfectMatch = do
 
                 
 -- Chattfunktionen
-
 {- To do:
 - Lägga till samma funktion som i programmet ovan; 
   att liten bokstav i början på ett ord inte spelar någon roll (om man ex skriver bye istället för Bye eller tvärtom)
 
- - Förslag på tillägg nedan :)
-
-
--- OBS! Nedanstående klagar på if-statement delen; kan ni se varför?  
-favorit = do
-    tvshows <- forM [1,2,3] (\a -> do
-        print $ "Vilken är din favorit tv-serie nummer "
-                    ++ show a ++ "?"
-        tvshow <- getLine
-        return tvshow)
-        
-        if ((not.leaveChat) tvshow) 
-                then 
-                    (if positivt ((filter (/=',') (filter (/='!') svar) ++ " ")) 
-                        then do     print $ "Så, dina favorit tv-serier är:"
-                                    mapM_ print tvshows
-                                    answer <- getLine
-                                    print $ "Intressant!"
-                                    date
-                        else do print ("Nehe, okej...")>> do avslut)
-                else do slut     
-
-
-date = do
-            print ("Du, nu har vi ju ändå snackat ett tag..")
-            print ("Så.. vill du gå på en date? :)")
-            svar <- getLine
-            if ((not.leaveChat) svar) 
-                then 
-                    (if positivt ((filter (/=',') (filter (/='!') svar) ++ " ")) 
-                        then do print ("Vad kul!")
-                                chooseDate
-                        else do print ("Okej, ha det gött då...")>> do avslut)
-                else do slut    
-    
-chooseDate = do
-    namnet <- readFile "name.temp"
-    print $ "Vad vill du hitta på?"
-    answer <- getLine
-    if ((not.leaveChat) answer) 
-        then  print ("Det låter kul " ++ namnet ++ " !") >> do svett 
-        else do slut
-        
-        
+- Lägg till funktionen för att ta bort "överflödiga"/konstiga tecken.  
+  
+- Förslag på tillägg nedan :)
 -}
+
 
 isConsonant = "qwrtpsdfghjklzxcvbnmQWRTPSDFGHJKLZXCVNM" 
 versal = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
@@ -434,6 +394,21 @@ perify xs
         | (head (xs)) == 'P' = ", " ++ xs
         | (head (xs)) `notElem` isConsonant = ", P" ++ [(toLower (head (xs)))] ++ (tail (xs))
         | otherwise = ", P" ++ (tail (xs))
+
+filmer :: [Char] -> Bool
+filmer xs
+    | "film " `isIn` zs = True
+    | "films " `isIn` zs = True
+    | "movie " `isIn` zs = True
+    | "movies " `isIn` zs = True
+    | "action " `isIn` zs = True
+    | "romance " `isIn` zs = True
+    | "comedy " `isIn` zs = True
+    | "documentary " `isIn` zs = True
+    | "thriller " `isIn` zs = True
+    | "horror " `isIn` zs = True
+    | otherwise = False
+     where zs = (filter (/=',') (filter (/='!') (map toLower xs)) ++ " ")
         
 positivt :: [Char] -> Bool
 positivt xs
@@ -455,39 +430,56 @@ leaveChat xs
     | "shut down " `isIn` zs = True
     | otherwise = False
      where zs = (filter (/=',') (filter (/='!') (map toLower xs)) ++ " ")
+
+-- Lägg till alla nya topics här!     
+identify x = if (leaveChat x)
+                then do slut
+                else if (filmer x)
+                    then do favorit
+                    else return()
      
 removeIfExists :: FilePath -> IO ()
 removeIfExists fileName = removeFile fileName `catch` handleExists
   where handleExists e
           | isDoesNotExistError e = return ()
           | otherwise = throwIO e    
-    
+
+          
 startChat = do              
             removeIfExists ("name.temp")
             removeIfExists ("stad.temp")
             appendFile "name.temp" ("")
             appendFile "stad.temp" ("")
             chatfriend <- readFile "chatWith.temp"
-            print ("Hello, what's your name?")
+            putStr "\n" >> print ("Hello, what's your name?") >> putStr "\n"
             sname <- getLine
             let name = takeWhile (/=' ') (dropWhile (not.isUpper)(filter (/=',') sname))
-            appendFile "name.temp" (name)
+            appendFile "name.temp" (name)            
             if ((not.leaveChat) name) 
-                then print ("Hi there " ++ name ++ "! " ++ 
+                then putStr "\n" >> print ("Hi there " ++ name ++ "! " ++ 
                     (if ('?' `elem` sname) 
                         then ", my name is " ++ chatfriend
                         else "!")) >> do bor
                 else do slut 
-            
+
+                
 bor = do 
             namnet <- readFile "name.temp"
-            print "Var bor du?"
+            putStr "\n" >> print "Var bor du?" >> putStr "\n"
             place <- getLine
+            
             if ((not.leaveChat) place) 
                 then  print ("Jaha " ++ namnet ++ (perify (namnet)) ++ 
-                             ", Piron, Paron, " ++ place ++ "... kul...") >> do svett 
+                             ", Piron, Paron, " ++ place ++ "... kul...") >> do chooseTopic 
                 else do slut
-                  
+ 
+ 
+chooseTopic = do
+    print "Vad är din passion i livet?"
+    topic <- getLine
+    identify topic
+
+    
 svett = do
             print ("Har du svettiga sockar?")
             svar <- getLine
@@ -506,6 +498,44 @@ avslut = do
 
 slut = do
             print ("Bye! :)")
+            
+            
+-- lägg in alla nya funktioner här
+favorit = do
+    tvshows <- forM [1,2,3] (\a -> do
+        print $ "\nVilken är din favorit tv-serie nummer " ++ show a ++ "?"
+        tvshow <- getLine
+        return tvshow)
+
+    if ((not.leaveChat) (show tvshows)) 
+        then do print $ "\nSå, dina favorit tv-serier är:"
+                mapM_ print tvshows
+                answer <- getLine
+                print $ "nIntressant!"
+                date
+    else do slut     
+
+
+date = do
+            print ("Du, nu har vi ju ändå snackat ett tag..")
+            print ("Så.. vill du gå på en date? :)")
+            svar <- getLine
+            if ((not.leaveChat) svar) 
+                then 
+                    (if positivt ((filter (/=',') (filter (/='!') svar) ++ " ")) 
+                        then do print ("Vad kul!")
+                                chooseDate
+                        else do print ("Okej, ha det gött då...") >> do avslut)
+                else do slut    
+
+                
+chooseDate = do
+    namnet <- readFile "name.temp"
+    print $ "Vad vill du hitta på?"
+    answer <- getLine
+    if ((not.leaveChat) answer) 
+        then  print ("Det låter kul " ++ namnet ++ " !") >> do svett 
+        else do slut
             
 -- movie = do  putStrLn ("What's your favorite movie?")
 --            film <- getLine
