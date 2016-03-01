@@ -467,6 +467,7 @@ startChat = do
             removeIfExists ("stad.temp")
             appendFile "name.temp" ("")
             appendFile "stad.temp" ("")
+            chatfriend <- readFile "chatWith.temp"
             print ("Hej, vad heter du?")
             sname <- getLine
             let name = takeWhile (/=' ') (dropWhile (not.isUpper)(filter (/=',') sname))
@@ -474,7 +475,7 @@ startChat = do
             if ((not.leaveChat) name) 
                 then print ("Hejsan " ++ name ++ 
                     (if ('?' `elem` sname) 
-                        then ", jag heter" 
+                        then ", jag heter " ++ chatfriend
                         else "!")) >> do bor
                 else do slut 
             
