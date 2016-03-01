@@ -14,8 +14,9 @@ import Data.List.Split (splitOn)
 import qualified Data.Text as T
 import Control.Exception
 import Control.Monad
+import System.Random
 
--- Version 2016-03-01 - Martin
+-- Version 2016-03-01 23.11 - Martin
  
 {- Upplägg:
 Inledningen: man skapar en profil som läggs till i databasen.
@@ -26,7 +27,7 @@ Kunna avsluta chatt och gå tillbaka till startmenyn.
  
 Fixa:
 Göra klart chattdelen
-Chatta på en gång från menyn. Välja en person?
+
 -}
  
  -- Deklarera data         
@@ -367,19 +368,15 @@ perfectMatch = do
                 if ((checkDigits option == True) && (elem (option ++ ")") ( words ( unlines numberedPersons)) == True))
                     then do putStrLn ("Starting a chat with " ++ chatfriend ++ ". Good luck! ;)")
                             removeIfExists ("chatWith.temp") >> appendFile "chatWith.temp" (chatfriend)
-                            do startChat                            
+                            do introChat                            
                     else do putStrLn "\nPlease try again with a number from the list!"
                             perfectMatch
 
                 
 -- Chattfunktionen
 {- To do:
-- Lägga till samma funktion som i programmet ovan; 
-  att liten bokstav i början på ett ord inte spelar någon roll (om man ex skriver bye istället för Bye eller tvärtom)
-
 - Lägg till funktionen för att ta bort "överflödiga"/konstiga tecken.  
   
-- Förslag på tillägg nedan :)
 -}
 
 
@@ -395,8 +392,32 @@ perify xs
         | (head (xs)) `notElem` isConsonant = ", P" ++ [(toLower (head (xs)))] ++ (tail (xs))
         | otherwise = ", P" ++ (tail (xs))
 
-filmer :: [Char] -> Bool
-filmer xs
+positivt :: [Char] -> Bool
+positivt xs
+    | "ja " `isIn` zs = True
+    | "yeah " `isIn` zs = True
+    | "jo " `isIn` zs = True
+    | "yes " `isIn` zs = True
+    | "sure " `isIn` zs = True
+    | "true " `isIn` zs = True
+    | otherwise = False
+     where zs = (filter (/=',') (filter (/='!') (map toLower xs)) ++ " ")
+   
+leaveChat :: [Char] -> Bool  
+leaveChat xs
+    | "bye-bye " `isIn` zs = True
+    | "bye " `isIn` zs = True
+    | "leave " `isIn` zs = True
+    | "turn off " `isIn` zs = True
+    | "shut down " `isIn` zs = True
+    | "see ya " `isIn` zs = True
+    | otherwise = False
+     where zs = (filter (/=',') (filter (/='!') (map toLower xs)) ++ " ") 
+
+--------------------------------------------------------------------------     
+  
+films :: [Char] -> Bool
+films xs
     | "film " `isIn` zs = True
     | "films " `isIn` zs = True
     | "movie " `isIn` zs = True
@@ -410,133 +431,250 @@ filmer xs
     | otherwise = False
      where zs = (filter (/=',') (filter (/='!') (map toLower xs)) ++ " ")
         
-positivt :: [Char] -> Bool
-positivt xs
-    | "ja " `isIn` zs = True
-    | "yeah " `isIn` zs = True
-    | "jo " `isIn` zs = True
-    | "yes " `isIn` zs = True
-    | "mja " `isIn` zs = True
-    | "true " `isIn` zs = True
-    | otherwise = False
-     where zs = (filter (/=',') (filter (/='!') (map toLower xs)) ++ " ")
-    
-leaveChat :: [Char] -> Bool  
-leaveChat xs
-    | "hejdå " `isIn` zs = True
-    | "bye " `isIn` zs = True
-    | "leave " `isIn` zs = True
-    | "turn off " `isIn` zs = True
-    | "shut down " `isIn` zs = True
+live :: [Char] -> Bool  
+live xs
+    | "live " `isIn` zs = True
+    | "city " `isIn` zs = True
+    | "bo " `isIn` zs = True
+    | "stad " `isIn` zs = True
+    | "städa " `isIn` zs = True
     | otherwise = False
      where zs = (filter (/=',') (filter (/='!') (map toLower xs)) ++ " ")
 
+poems :: [Char] -> Bool  
+poems xs
+    | "read " `isIn` zs = True
+    | "write " `isIn` zs = True
+    | "poetry " `isIn` zs = True
+    | "poesi " `isIn` zs = True
+    | "text " `isIn` zs = True
+    | "novel " `isIn` zs = True
+    | otherwise = False
+     where zs = (filter (/=',') (filter (/='!') (map toLower xs)) ++ " ")
+
+hookUp :: [Char] -> Bool  
+hookUp xs
+    | "meet up " `isIn` zs = True
+    | "bar " `isIn` zs = True
+    | "dinner " `isIn` zs = True
+    | "date " `isIn` zs = True
+    | "drink " `isIn` zs = True
+    | "coffe " `isIn` zs = True
+    | otherwise = False
+     where zs = (filter (/=',') (filter (/='!') (map toLower xs)) ++ " ")     
+   
+sweaty :: [Char] -> Bool  
+sweaty xs
+    | "work out " `isIn` zs = True
+    | "sweaty " `isIn` zs = True
+    | "tough day " `isIn` zs = True
+    | "long day " `isIn` zs = True
+    | "shoes " `isIn` zs = True
+    | otherwise = False
+     where zs = (filter (/=',') (filter (/='!') (map toLower xs)) ++ " ")   
+
+sports :: [Char] -> Bool  
+sports xs
+    | "football " `isIn` zs = True
+    | "basketball " `isIn` zs = True
+    | "tennis " `isIn` zs = True
+    | "ice hockey " `isIn` zs = True
+    | "riding " `isIn` zs = True
+    | "cricket " `isIn` zs = True
+    | "badminton " `isIn` zs = True
+    | "running " `isIn` zs = True
+    | "skating " `isIn` zs = True
+    | "skiing " `isIn` zs = True
+    | otherwise = False
+     where zs = (filter (/=',') (filter (/='!') (map toLower xs)) ++ " ")       
+  
+ 
 -- Lägg till alla nya topics här!     
 identify x = if (leaveChat x)
-                then do slut
-                else if (filmer x)
+                then do end
+                else if (films x)
                     then do favorit
-                    else return()
-     
+                    else if (live x)
+                        then do city
+                        else if (poems x)
+                            then do poetry
+                            else if (hookUp x)
+                                then do date
+                                else if (sweaty x)
+                                    then do sweat
+                                    else if (sports x)
+                                        then do sport
+                                        else return ()
+ 
+-- idList = ["work out ", "sweaty ", "long dag ", "tough day ", "shoes ", "read ", "write ", 
+--           "poetry ", "poesi ", "läsa ", "skriva ", "meet up ", "bar ", "dinner ", "date ", 
+--           "drink ", "coffe ", "film ", "films ", "movie ", "movies ", "action ", "romance ",
+--           "comedy ", "documentary ", "thriller ", "horror ", "live ", "city ", "bo ", "stad ", "städa "] 
+ 
 removeIfExists :: FilePath -> IO ()
 removeIfExists fileName = removeFile fileName `catch` handleExists
   where handleExists e
           | isDoesNotExistError e = return ()
           | otherwise = throwIO e    
 
-          
-startChat = do              
+     
+startChat = do
+    handle <- openFile "databas.txt" ReadMode
+    (tempName, tempHandle) <- openTempFile "." "temp"  
+    
+    contents <- hGetContents handle
+    let person = lines contents
+        numberedPersons = zipWith (\n line -> show n ++ ") " ++ line) [0..] person     
+    
+    putStrLn "\nHere is the database: "  
+    putStrLn $ unlines numberedPersons  
+ 
+    putStrLn "Which person do you want to start talking to? \n"
+    option <- getLine
+    let chatfriend = (words (unwords (splitOn "," (numberedPersons !! read option))) !! 1)
+                
+    if ((checkDigits option == True) && (elem (option ++ ")") ( words ( unlines numberedPersons)) == True))
+                    then do putStrLn ("\nStarting a chat with " ++ chatfriend ++ ". Good luck! ;)")
+                            removeIfExists ("chatWith.temp") >> appendFile "chatWith.temp" (chatfriend)
+                            do introChat                            
+                    else do putStrLn "\nPlease try again with a number from the list!"
+                            startChat
+
+introChat = do              
             removeIfExists ("name.temp")
             removeIfExists ("stad.temp")
             appendFile "name.temp" ("")
             appendFile "stad.temp" ("")
             chatfriend <- readFile "chatWith.temp"
-            putStr "\n" >> print ("Hello, what's your name?") >> putStr "\n"
+            putStrLn ("\nHello, what's your name?\n")
             sname <- getLine
             let name = takeWhile (/=' ') (dropWhile (not.isUpper)(filter (/=',') sname))
             appendFile "name.temp" (name)            
             if ((not.leaveChat) name) 
-                then putStr "\n" >> print ("Hi there " ++ name ++ "! " ++ 
+                then putStrLn ("\nHi there " ++ name ++ 
                     (if ('?' `elem` sname) 
                         then ", my name is " ++ chatfriend
-                        else "!")) >> do bor
-                else do slut 
+                        else "!")) >> do chooseTopic
+                else do end                 
 
-                
-bor = do 
-            namnet <- readFile "name.temp"
-            putStr "\n" >> print "Var bor du?" >> putStr "\n"
-            place <- getLine
-            
-            if ((not.leaveChat) place) 
-                then  print ("Jaha " ++ namnet ++ (perify (namnet)) ++ 
-                             ", Piron, Paron, " ++ place ++ "... kul...") >> do chooseTopic 
-                else do slut
- 
- 
+                          
+randomQuestion = ["Whats your passion in life?\n", "What do you do for a living?\n", 
+                  "I like music such as opera, choral music, and classical music.\n", "What's on your mind?"]
 chooseTopic = do
-    print "Vad är din passion i livet?"
+    --randomInt :: IO Int
+    randomInt <- getStdRandom (randomR (0, (length randomQuestion - 1)))
+    let randomQ = randomQuestion !! randomInt
+    putStrLn randomQ
+    
     topic <- getLine
     identify topic
-
     
-svett = do
-            print ("Har du svettiga sockar?")
-            svar <- getLine
-            if ((not.leaveChat) svar) 
-                then (if (positivt (svar)) 
-                        then print ("Byt strumpor!") 
-                        else print ("Rena strumpor, inga strumpor, lika bra...")>> do avslut)
-                else do slut
+    end
+ 
+ 
+end = do
+    name <- readFile "name.temp"
+    putStrLn ("\nI'm gonna leave now " ++ name ++ ", nice talking to you. \n")
+    bye <- getLine
+    identify bye
             
-avslut = do
-            namnet <- readFile "name.temp"
-            print ("Jag ska kila nu " ++ namnet ++ ", kul att snacka med dig.")
-            bye <- getLine
-            
-            slut
+    terminate
 
-slut = do
-            print ("Bye! :)")
+            
+terminate = do
+    putStrLn ("\n Bye! :) \n")
+    putStrLn "Chat terminated. Going back to main menu!"
+
+    menu
             
             
--- lägg in alla nya funktioner här
+-- Lägg in alla nya funktioner här               
+city = do 
+    putStrLn "\nWhere do you live? \n"
+    place <- getLine
+    identify place
+    putStrLn ("\nSo you live in " ++ place ++ ", nice! Do you have a big place?\nI'm not saying I'm gonna move in or anything.. \nJust, you know, if it's theoretically possible..")
+    answer <- getLine
+    if ((not.leaveChat) answer) 
+        then 
+            if (positivt answer)
+                then putStrLn "Great!"
+                else putStrLn "That's to bad :/"
+        else end
+    chooseTopic            
+            
+poetry = do
+    name <- readFile "name.temp"
+    putStrLn  (name ++ (perify (name)) ++ ", Piron, Paron. " ++ "\nYou know, I've been thinking about doing some poetryslam, is there anything more sexy?")
+    chooseTopic
+
+  
+sweat = do
+            putStrLn ("\nDo you have sweaty socks? \n")
+            answer <- getLine
+            if ((not.leaveChat) answer) 
+                then (if (positivt (answer)) 
+                        then putStrLn ("\nGet yourself a clean pair of socks! \n") >> identify answer >> do chooseTopic
+                        else putStrLn ("\nRena strumpor, inga strumpor, lika bra...\n")>> identify answer >> do end)
+                else identify answer >> do end            
+                
 favorit = do
-    tvshows <- forM [1,2,3] (\a -> do
-        print $ "\nVilken är din favorit tv-serie nummer " ++ show a ++ "?"
-        tvshow <- getLine
-        return tvshow)
-
-    if ((not.leaveChat) (show tvshows)) 
-        then do print $ "\nSå, dina favorit tv-serier är:"
-                mapM_ print tvshows
-                answer <- getLine
-                print $ "nIntressant!"
-                date
-    else do slut     
-
-
+        putStrLn $ "\nCool! So, which is your favorite tv-show?"
+        tvshow1 <- getLine
+        identify tvshow1
+        if "game of thrones" `isIn` (map toLower tvshow1) 
+            then ((putStrLn "\nYeah; Winter is coming, so awesome!") >> do chooseTopic) 
+            else if "downton abbey" `isIn` (map toLower tvshow1) 
+                then ((putStrLn "\nOh yeah, you just want to wander around in their clothes and fight a little with lady Mary Crawley ;)") >> do date)
+                else putStrLn $ "\nWhich is your favorit tv-series number two?"
+        tvshow2 <- getLine
+        identify tvshow2
+        if "game of thrones" `isIn` (map toLower tvshow2) 
+            then (putStrLn "\nYeah; Winter is coming, so awesome!" >> do chooseTopic) 
+            else if "downton abbey" `isIn` (map toLower tvshow2) 
+                then (putStrLn "\nOh yeah, you just want to wander around in their clothes and fight a little with lady Mary Crawley ;)" >> do date)
+                else putStrLn $ "\nNummer tre då?"
+        tvshow3 <- getLine
+        identify tvshow3
+        if "game of thrones" `isIn` (map toLower tvshow1) 
+            then (putStrLn "\nYeah; Winter is coming, so awesome!" >> do chooseTopic) 
+            else if "downton abbey" `isIn` (map toLower tvshow1) 
+                then (putStrLn "\nOh yeah, you just want to wander around in their clothes and fight a little with lady Mary Crawley ;)" >> do date)
+                else putStrLn ("So, your favorite tv-shows are " ++ tvshow1 ++ ", " ++ tvshow2 ++ " and " ++ tvshow3 ++ "\nInteresting...") 
+                
+        end
+     
 date = do
-            print ("Du, nu har vi ju ändå snackat ett tag..")
-            print ("Så.. vill du gå på en date? :)")
-            svar <- getLine
-            if ((not.leaveChat) svar) 
+            putStrLn ("\nHey you, now that we've been talking for a while..")
+            putStrLn ("So.. wanna go on a date? :) \n")
+            answer <- getLine
+            if ((not.leaveChat) answer) 
                 then 
-                    (if positivt ((filter (/=',') (filter (/='!') svar) ++ " ")) 
-                        then do print ("Vad kul!")
+                    if (positivt answer)
+                        then do putStrLn ("\nAwesome! :)")
                                 chooseDate
-                        else do print ("Okej, ha det gött då...") >> do avslut)
-                else do slut    
+                        else do putStrLn ("\nAlright, well take care...\n") >> do end
+                else identify answer >> do end  
 
                 
 chooseDate = do
     namnet <- readFile "name.temp"
-    print $ "Vad vill du hitta på?"
+    putStrLn $ "So what do you wanna do on our first date? :) \n"
     answer <- getLine
     if ((not.leaveChat) answer) 
-        then  print ("Det låter kul " ++ namnet ++ " !") >> do svett 
-        else do slut
+        then  putStrLn ("\nThat sounds like fun " ++ namnet ++ "!") >> do chooseTopic
+        else identify answer >> do end
             
+            
+sport = do
+    putStrLn "\nOh, sweet!"
+    putStrLn "\n I've been playing tennis myself for five years."
+    putStrLn "\n Do you have a favorite football team?\n"
+    answer <- getLine
+    if ((not.leaveChat) answer)
+        then putStrLn ("\nI guess " ++ answer ++ " is okey.") >> do chooseTopic
+        else identify answer >> do end
+    
 -- movie = do  putStrLn ("What's your favorite movie?")
 --            film <- getLine
 --            putStrLn ("Oh thats a great one! Have you seen the latest Hunger Games movie?")
