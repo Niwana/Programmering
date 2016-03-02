@@ -1,0 +1,76 @@
+Presentation
+
+1. Skapa en profil: Visa vad som händer om man lämnar ett fält tomt; nämligen att programmet säger till och man får göra om och göra rätt. Fyll sedan i namn, ålder, längd, stad och genre på ett korrekt sätt.
+
+2. Visa databasen: Uppmärksamma att den nya profilen finns med i listan.
+
+3. Lägg till en person: Fyll i annat namn, ålder, längd, stad och genre.
+
+4. Ta bort person:
+Här visas listan på alla personer. 
+OBS!! Om det finns någon tom rad: ta bort denna först (Annars fungerar inte sökfunktionerna).
+Ta sedan bort valfri person.
+
+EV skriv in siffra som inte finns i listan för att visa att programmet tar hand om det också.
+
+Gå därefter in på visa databasen igen för att visa att personen är borta.
+5. Gå igenom några av sökfunktionerna:
+-	Sök på ålder: visar att man kan söka i ett intervall. Ev visa att man kan skriva in bokstäver utan att programmet kraschar (men att den då inte kommer hitta någon matchning).
+-	Sök på city: Sök på Stockholm.
+-	Nämn att de övriga sökfunktioner fungerar på liknande sätt.
+
+6. Perfect Match:
+Som hjälp på traven för alla som inte har nätdejtat innan har vi skapat perfectMatch som gör det enkelt för alla att hitta sin ”rätta”; och det går då till som följande: man skriver in sina kriterier inom ålder, stad och favorit film genre. Visa detta genom att:
+1. Skriv in min ålder 25 och max ålder 30, Stockholm och romance.
+Detta kommer inte ge några matchningar, vilket programmet säger till om. Det kan bero antingen på att man är för petig i sina kriterium, eller att man har lämnat något fält tomt.
+2. Skriv in min ålder 20 och max ålder 30, Stockholm och romance.
+Nu kommer det upp minst två resultat 
+Välj en person att prata med, skriv in siffran.
+Sedan startar chatten automatiskt.
+
+ 
+7. Chatta 
+Hello, what’s your name?
+Svara: my name is X (med stor bokstav)
+
+Om: I like music such as opera, choral music, and classical music.
+Svara: Cool, I like to watch movies 
+Datorn: What's your favorite movie?
+Svara: Oh tough question, but Ant-man is a good one haha ;)
+
+Datorn: Oh thats a great one! Have you seen the latest Hunger Games movie?
+Svara: Yes :)
+
+Datorn: Me too, I really liked it, did you?
+Svara: Yes it was very good ;)
+
+Datorn: I thought so!
+
+Om: What’s on your mind?
+Svara: Well, it’s nice weather today 
+Datorn: Nice with spring coming now and the weather being a little sunnier and warmer, don't you think?
+Svara: Yeah it really is :)
+
+Datorn: Maybe we could take a cup of coffee someplace nice? :)
+Svara: Sure, sounds nice! :)
+
+Datorn: Cool, looking forward to it! ;)
+
+Om: What's your passion in life?
+Svara: I love hanging out with friends and family :)
+
+Datorn: Do you want to be my friend?
+Svara: Sure, why not? :)
+
+Datorn: My best friend?
+Svara: Haha okay ;)
+
+Datorn: Now we are BFFS! 
+
+Om datorn upprepar sig (ex skriver ”What’s on your mind” igen); skriv: yeah you said that already..
+Datorn: I’m gonna leave now, nice talking to you.
+Svara: You too (INTE bye, då säger den samma sak igen)
+8. Visa menyn igen och att man kan välja att börja chatta med vem som helst från listan (utan att behöva göra en perfectMatch igen). SLUT 
+OBS! Starta ej en ny konversation.
+
+SLUT 
