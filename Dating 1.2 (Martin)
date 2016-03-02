@@ -525,6 +525,54 @@ friends xs
     | "girlfriend " `isIn` zs = True
     | otherwise = False
      where zs = (filter (/=',') (filter (/='!') (map toLower xs)) ++ " ") 
+
+nazi :: [Char] -> Bool  
+nazi xs
+    | "hitler " `isIn` zs = True
+    | "sverigedemokraterna " `isIn` zs = True
+    | "nsdap " `isIn` zs = True
+    | "third reich " `isIn` zs = True
+    | "adolf " `isIn` zs = True
+    | "germany " `isIn` zs = True
+    | "blitzkrieg " `isIn` zs = True
+    | otherwise = False
+     where zs = (filter (/=',') (filter (/='!') (map toLower xs)) ++ " ") 
+     
+messiah :: [Char] -> Bool  
+messiah xs
+    | "jesus " `isIn` zs = True
+    | "christ " `isIn` zs = True
+    | "holy trinity " `isIn` zs = True
+    | "messiah " `isIn` zs = True
+    | "heavenly father " `isIn` zs = True
+    | "king of kings " `isIn` zs = True
+    | "savior " `isIn` zs = True
+    | otherwise = False
+     where zs = (filter (/=',') (filter (/='!') (map toLower xs)) ++ " ") 
+     
+other :: [Char] -> Bool  
+other xs
+    | "boring " `isIn` zs = True
+    | "moving " `isIn` zs = True
+    | "workplace " `isIn` zs = True
+    | "family " `isIn` zs = True
+    | "car " `isIn` zs = True
+    | "beach " `isIn` zs = True
+    | "wait " `isIn` zs = True
+    | otherwise = False
+     where zs = (filter (/=',') (filter (/='!') (map toLower xs)) ++ " ") 
+     
+sad :: [Char] -> Bool  
+sad xs
+    | "sleep " `isIn` zs = True
+    | "hard life " `isIn` zs = True
+    | "routine " `isIn` zs = True
+    | "alone " `isIn` zs = True
+    | "sad " `isIn` zs = True
+    | "need someone " `isIn` zs = True
+    | "by my self " `isIn` zs = True
+    | otherwise = False
+     where zs = (filter (/=',') (filter (/='!') (map toLower xs)) ++ " ") 
      
 gamings :: [Char] -> Bool  
 gamings xs
@@ -594,12 +642,16 @@ identify x = if (leaveChat x)
                                                                 then do weather
                                                                 else if (yesNoAnswers x)
                                                                     then do yesNoAnswer
-                                                                    else return ()
+                                                                    else if (nazi x)
+                                                                        then do hitler
+                                                                        else if (messiah x)
+                                                                            then do jesus
+                                                                            else if (other x)
+                                                                                then do wrongperson
+                                                                                else if (sad x)
+                                                                                    then do lonley
+                                                                                    else return ()
  
--- idList = ["work out ", "sweaty ", "long dag ", "tough day ", "shoes ", "read ", "write ", 
---           "poetry ", "poesi ", "läsa ", "skriva ", "meet up ", "bar ", "dinner ", "date ", 
---           "drink ", "coffe ", "film ", "films ", "movie ", "movies ", "action ", "romance ",
---           "comedy ", "documentary ", "thriller ", "horror ", "live ", "city ", "bo ", "stad ", "städa "] 
  
 removeIfExists :: FilePath -> IO ()
 removeIfExists fileName = removeFile fileName `catch` handleExists
@@ -697,7 +749,32 @@ poetry = do
     putStrLn  ("\n" ++ name ++ (perify (name)) ++ ", Piron, Paron. " ++ "\nYou know, I've been thinking about doing some poetryslam, is there anything more sexy?\n")
     chooseTopic
 
-  
+    
+jesus = do
+    putStrLn ("\nWell, I guess one wouldn't need to use a datingsite if one could separate an ocean and turn water into wine? \n")
+    answer <- getLine
+    identify answer >> do chooseTopic
+
+    
+hitler = do
+    putStrLn ("\nIt takes quite a guy to turn a simple mustasch into a big facial hair no no, at least for the better part of a century!\nDoesent it? \n")
+    answer <- getLine
+    identify answer >> do chooseTopic
+
+    
+wrongperson = do
+    name <- readFile "name.temp"
+    putStrLn ("\nYeah, I'm chating with this " ++ name ++ ", don't know, it might get somewhere but " ++ name ++ " is just the worst name I've heard\n \nSorry, wrong chat, please don't read \n")
+    answer <- getLine
+    identify answer >> do chooseTopic  
+
+    
+lonley = do
+    putStrLn ("\nLife has been tough for a while now, I don't know how or why I get up of bed in the morning... Everything follows the same routine\n Waking up alone, go to work, coming home from work with no energy, watching startrek tng over and over again until it is time to go to bed\n Maybe if I find someone they can help me get out of this bad loop... \n")
+    answer <- getLine
+    identify answer >> do chooseTopic  
+
+    
 sweat = do
             putStrLn ("\nDo you have sweaty socks? \n")
             answer <- getLine
@@ -706,6 +783,7 @@ sweat = do
                         then putStrLn ("\nGet yourself a clean pair of socks! \n") >> identify answer >> do chooseTopic
                         else putStrLn ("\nRena strumpor, inga strumpor, lika bra...\n")>> identify answer >> do end)
                 else identify answer >> do end            
+
                 
 tvShow = do
         putStrLn $ "\nCool! So, which is your favorite tv-show?"
@@ -732,18 +810,19 @@ tvShow = do
                 else putStrLn ("So, your favorite tv-shows are " ++ tvshow1 ++ ", " ++ tvshow2 ++ " and " ++ tvshow3 ++ "\nInteresting...") 
                 
         end
-     
+
+        
 date = do
-            putStrLn ("\nHey you, now that we've been talking for a while..")
-            putStrLn ("So.. wanna go on a date? :) \n")
-            answer <- getLine
-            if ((not.leaveChat) answer) 
-                then 
-                    if (positivt answer)
-                        then do putStrLn ("\nAwesome! :)")
-                                chooseDate
-                        else do putStrLn ("\nAlright, well take care...\n") >> do end
-                else identify answer >> do end  
+    putStrLn ("\nHey you, now that we've been talking for a while..")
+    putStrLn ("So.. wanna go on a date? :) \n")
+    answer <- getLine
+    if ((not.leaveChat) answer) 
+        then 
+            if (positivt answer)
+                then do putStrLn ("\nAwesome! :)")
+                        chooseDate
+                else do putStrLn ("\nAlright, well take care...\n") >> do end
+        else identify answer >> do end  
 
                 
 chooseDate = do
