@@ -375,7 +375,14 @@ versal = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
 isIn :: (Eq a) => [a] -> [a] -> Bool
 n `isIn` h = any (n `isPrefixOf`) (tails h)
-  
+
+noHello xs
+    | "Hi" `isIn` xs = False
+    | "Hello" `isIn` xs = False
+    | "Hej" `isIn` xs = False
+    | "Hey" `isIn` xs = False
+    | otherwise = True
+
 perify :: [Char] -> [Char]
 perify xs
         | (head (xs)) == 'P' = ", " ++ xs
@@ -690,7 +697,7 @@ introChat = do
             chatfriend <- readFile "chatWith.temp"
             putStrLn ("\n" ++ chatfriend ++ ": Hello, what's your name?\n")
             sname <- getLine
-            let name = takeWhile (/=' ') (dropWhile (not.isUpper)(filter (/=',') sname))
+            let name = takeWhile (/=' ') (dropWhile (not.isUpper)(filter (/=',') (unwords(filter noHello (words sname)))))
             appendFile "name.temp" (name)            
             if ((not.leaveChat) name) 
                 then putStrLn ("\nHi there " ++ name ++ 
