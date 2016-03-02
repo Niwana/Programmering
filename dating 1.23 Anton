@@ -723,7 +723,7 @@ end = do
     name <- readFile "name.temp"
     putStrLn ("\nWell then.. I'm gonna leave now " ++ name ++ ", nice talking to you. \n")
     bye <- getLine
-    identify bye
+    identify (unwords(filter (not.leaveChat) (words bye)))
             
     terminate
 
@@ -937,4 +937,5 @@ yesNoAnswer = do
         
 -- Sofia: demonstration av programmet        
 -------------------------------------------------------------------------------------------        
+
 
