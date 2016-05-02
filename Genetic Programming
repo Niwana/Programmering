@@ -1,0 +1,10 @@
+randomString :: IO String
+randomString = (liftM (take (length target) . randomRs (' ', 'z')) newStdGen)     
+
+
+population :: Int
+population = 10
+
+
+generations :: IO [String]
+generations = replicateM population randomString   
