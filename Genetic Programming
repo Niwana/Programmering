@@ -1,10 +1,51 @@
+import Control.Applicative
+import Control.Arrow (second)
+import Control.Monad (liftM, replicateM)
+import Control.Monad.Random
+import Data.Function (on)
+import Data.List (minimumBy, sortBy, nub, (\\))
+import Data.Ord (comparing)
+import Text.Printf (printf)
+import Test.QuickCheck
+import Test.QuickCheck.Monadic
+import Test.HUnit hiding (assert)
+import System.Random
+import System.IO
+import System.IO.Unsafe
+import Data.Char
+
+target = "hejsan"
+
 randomString :: IO String
 randomString = (liftM (take (length target) . randomRs (' ', 'z')) newStdGen)     
 
-
 population :: Int
-population = 10
-
+population = 100
 
 generations :: IO [String]
-generations = replicateM population randomString   
+generations = replicateM population randomString 
+
+startGen :: [String]
+startGen = unsafePerformIO generations
+
+goodOrNot :: String -> String -> Int
+goodOrNot _ [] = 0
+goodOrNot [] _ = 0
+goodOrNot (x:xs) (y:ys) = if x /= y then 1 + (goodOrNot xs ys) else (goodOrNot xs ys)
+
+values :: [String] -> [Int]
+values [] = []
+values (x:xs) = (goodOrNot x target) : (values xs)
+
+valueTuples :: [String] -> [(String, Int)] 
+valueTuples x = sortBy (compare `on` snd) (zip x (values x))
+
+progenitor = do writeFile "utveckling.txt" ("1. " ++ (fst (head(take 1 (valueTuples startGen)))) ++ " (" ++ (show (head (map snd (take 1 (valueTuples startGen))))) ++ " fel)")
+
+t1 x = head (valueTuples x)
+t2 x = head (drop 1 (valueTuples x))
+randomLetter = (getStdRandom (randomR ('a', 'z')))
+randomPromille = getStdRandom (randomR (0, (length [1..1000])))
+randomProcent = getStdRandom (randomR (0, (length [1..100])))
+
+descendant = length target
