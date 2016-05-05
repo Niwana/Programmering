@@ -16,11 +16,17 @@ import Data.Char
 
 target = "hejsan"
 
-randomString :: IO String
-randomString = (liftM (take (length target) . randomRs (' ', 'z')) newStdGen)     
-
 population :: Int
 population = 100
+
+mutation_promille = 12
+
+fstParent_procent = 50
+
+-- lyft in target, population_procent, mutation_promille och fstParent_procent i getline main?
+
+randomString :: IO String
+randomString = (liftM (take (length target) . randomRs (' ', 'z')) newStdGen)     
 
 generations :: IO [String]
 generations = replicateM population randomString 
@@ -38,14 +44,31 @@ values [] = []
 values (x:xs) = (goodOrNot x target) : (values xs)
 
 valueTuples :: [String] -> [(String, Int)] 
-valueTuples x = sortBy (compare `on` snd) (zip x (values x))
+valueTuples x = 
+    sortBy (compare `on` snd) (zip x (values x))
+--    newParentToTemp x
 
-progenitor = do writeFile "utveckling.txt" ("1. " ++ (fst (head(take 1 (valueTuples startGen)))) ++ " (" ++ (show (head (map snd (take 1 (valueTuples startGen))))) ++ " fel)")
+progenitor = do 
+    writeFile "utveckling.txt" ("Target = " ++ target ++ "\nPopulation = " ++ (show population) ++ "\nMutationfactor = " ++ (show mutation_promille) ++ " promille\n\n1. " ++ (fst (head(take 1 (valueTuples startGen)))) ++ " (" ++ (show (head (map snd (take 1 (valueTuples startGen))))) ++ " fel)")
+    newParentToTemp startGen
+    
+newParentToTemp x = do 
+    writeFile "fst.temp" (fst (head( take 1 (valueTuples x))))
+    writeFile "snd.temp" (fst (head ( take 1 (drop 1 (valueTuples x)))))
 
-t1 x = head (valueTuples x)
-t2 x = head (drop 1 (valueTuples x))
 randomLetter = (getStdRandom (randomR ('a', 'z')))
 randomPromille = getStdRandom (randomR (0, (length [1..1000])))
 randomProcent = getStdRandom (randomR (0, (length [1..100])))
 
 descendant = length target
+
+mutate :: [Char] -> [Char]
+mutate [] = [] 
+mutate (x:xs) = if mutation_promille >= (do unsafeDupablePerformIO randomPromille) then (do unsafeDupablePerformIO randomLetter) : mutate (xs) else x : mutate (xs)
+
+recordBest x y = do appendFile "utveckling.txt" ("\n" ++ (show y) ++ ". " ++ (fst (head(take 1 (valueTuples x)))) ++ " (" ++ (show (head (map snd (take 1 (valueTuples x))))) ++ " fel)")
+
+------------------------------------------------------------------------------------
+
+main = do
+    progenitor
