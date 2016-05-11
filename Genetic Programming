@@ -16,7 +16,7 @@ import Data.Char
 import Control.DeepSeq
 import Control.Exception
 
-target = "hejsan"
+target = "Hejsan martin, jag tror att det funkar :) gjorde bara ett dumt fel och missade att ta bort tempfilerna"
 
 population :: Int
 population = 100
@@ -25,10 +25,8 @@ mutation_promille = 12
 
 fstParent_procent = 50
 
--- lyft in target, population_procent, mutation_promille och fstParent_procent i getline main?
-
 randomString :: IO String
-randomString = (liftM (take (length target) . randomRs (' ', 'z')) newStdGen)     
+randomString = (liftM (take (length target) . randomRs (' ', '~')) newStdGen)     
 
 generations :: IO [String]
 generations = replicateM population randomString 
@@ -52,43 +50,39 @@ valueTuples x =
 progenitor = do 
     writeFile "utveckling.txt" ("Target = " ++ target ++ "\nPopulation = " ++ (show population) ++ "\nMutationfactor = " ++ (show mutation_promille) ++ " promille\n" )
     writeFile "genCount.temp" (show 0)
-    newParentToTemp startGen
+    newParentToTemp startGen 1
     
-newParentToTemp x = do 
+newParentToTemp x n = do 
+    recordBest x n
     writeFile "fst.temp" (fst (head( take 1 (valueTuples x))))
     writeFile "snd.temp" (fst (head ( take 1 (drop 1 (valueTuples x)))))
-    file <- readFile "genCount.temp"
-    evaluate (force file)
-    writeFile "genCount.temp" (show (digitToInt (head (file)) + 1))
-    recordBest x
-    if (head (map snd (take 1 (valueTuples x)))) == 0 then putStrLn (show (digitToInt (head (file)) + 1))
-    else putStrLn "problem här i loopen"
-    --else newParentToTemp (descendant (population))
-    --else do main2
+    if (head (map snd (take 1 (valueTuples x)))) == 0 then putStrLn (show n)
+    else newParentToTemp (descendant (population)) (n+1)
+        
+recordBest x n = do appendFile "utveckling.txt" ("\n" ++ (show n) ++ ". " ++ (fst (head(take 1 (valueTuples x)))) ++ " (" ++ (show (head (map snd (take 1 (valueTuples x))))) ++ " fel)")
     
-recordBest x = do appendFile "utveckling.txt" ("\n" ++ (unsafePerformIO(readFile "genCount.temp")) ++ ". " ++ (fst (head(take 1 (valueTuples x)))) ++ " (" ++ (show (head (map snd (take 1 (valueTuples x))))) ++ " fel)")
-    
-randomLetter = (getStdRandom (randomR ('a', 'z')))
+randomLetter = (getStdRandom (randomR (' ', '~')))
 randomPromille = getStdRandom (randomR (0, (length [1..1000])))
 randomProcent = getStdRandom (randomR (0, (length [1..100])))
 
 descendant :: Int -> [String]
 descendant 0 = []
-descendant n = (mutate fst snd) : (descendant (n-1))
-           where fst = unsafePerformIO (readFile "fst.temp") -- head (unsafePerformIO (withFile "fst.temp" ReadMode getlines)) --
-                 snd = unsafePerformIO (readFile "snd.temp")
+descendant n = (mutate (unsafePerformIO firstp) (unsafePerformIO secondp)) : (descendant (n-1))
                  
-getlines :: Handle -> IO [String]
-getlines h = lines `fmap` hGetContents h           
-    
+firstp = do 
+    firstp <- readFile "fst.temp"
+    evaluate (force firstp)
+
+secondp = do
+    secondp <- readFile "snd.temp"
+    evaluate (force secondp)
+
 mutate :: [Char] -> [Char] -> [Char]
 mutate _ [] = []
 mutate [] _ = [] 
 mutate (x:xs) (y:ys) = if mutation_promille >= (do unsafeDupablePerformIO randomPromille) then (do unsafeDupablePerformIO randomLetter) : mutate (xs) (ys) else if fstParent_procent >= (do unsafeDupablePerformIO randomProcent) then x : (mutate xs ys) else y : (mutate xs ys)
 
-
-
-------------------------------------------------------------------------------------
+-----------------------------------------------------------------------------
 
 main = do
     progenitor
