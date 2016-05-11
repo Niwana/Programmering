@@ -1,0 +1,62 @@
+import Control.Monad (liftM, replicateM)
+import Control.Monad.Random
+import System.IO.Unsafe
+import Data.List
+import Data.Function (on)
+
+type Gene = String
+
+target :: Gene
+target = "Hello world"
+
+inputString = do
+    putStrLn "Please enter a target string: "
+    --string <- getLine
+    writeFile "targetString.txt" target
+
+
+    
+    
+randomString :: IO String
+randomString = (liftM (take (length target) . randomRs (' ', 'z')) newStdGen)             
+
+population :: Int
+population = 100
+
+initialPopulation :: [String]
+initialPopulation = unsafePerformIO (replicateM population randomString)   
+
+
+-- kollar om en bokstav är på rätt plats
+fitnessValue :: String -> String -> Int
+fitnessValue [] _ = 0
+fitnessValue _ [] = 0
+fitnessValue (x:xs) (y:ys) = if x == y
+                                then (fitnessValue xs ys) + 1
+                                else fitnessValue xs ys
+
+-- gör en tuple av varje genom med dess fitness-värde
+fitness :: [String] -> [(String, Int)]
+fitness [] = []
+fitness (x:xs) = [(x, (fitnessValue x target))] ++ fitness xs       --man kan köra fitness initialPopulation
+
+   
+-- välj ut de två individer med högst fitness    
+highestFitness :: [(String, Int)]            
+highestFitness = drop (population-2) (sortBy (compare `on` snd) (fitness initialPopulation))
+
+
+-- para de två individerna
+-- tuple to strings
+--tupleToStrings :: [(a, b)] -> [a]
+firstTupleToString = (fst (head highestFitness))
+secondTupleToString = (fst (last highestFitness))
+
+
+randomInt :: IO Int
+randomInt = (getStdRandom (randomR (0, (length (target) - 1))))
+
+
+mate :: String -> String -> String 
+mate g1 g2 = take n g1 ++ drop n g2
+    where n = unsafePerformIO (getStdRandom (randomR (1, (length (g1) - 1))))
