@@ -1,29 +1,10 @@
-import Control.Applicative
-import Control.Arrow (second)
 import Control.Monad (liftM, replicateM)
 import Control.Monad.Random
 import Data.Function (on)
-import Data.List (minimumBy, sortBy, nub, (\\))
-import Data.Ord (comparing)
-import Text.Printf (printf)
-import Test.QuickCheck
-import Test.QuickCheck.Monadic
-import Test.HUnit hiding (assert)
-import System.Random
-import System.IO
+import Data.List 
 import System.IO.Unsafe
-import Data.Char
 import Control.DeepSeq
 import Control.Exception
-
-target = "Hej"
-
-population :: Int
-population = 100
-
-mutation_promille = 12
-
-fstParent_procent = 50
 
 randomString :: Int -> IO String
 randomString x = (liftM (take x . randomRs (' ', '~')) newStdGen)     
