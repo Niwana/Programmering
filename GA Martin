@@ -4,24 +4,28 @@ import System.IO.Unsafe
 import Data.List
 import Data.Function (on)
 
+import Control.DeepSeq
+import Control.Exception
+
 type Gene = String
 
 target :: Gene
-target = "Hello world"
-
-inputString = do
-    putStrLn "Please enter a target string: "
-    --string <- getLine
-    writeFile "targetString.txt" target
-
-
+target = unsafePerformIO (readFile "targetString.txt")
     
     
 randomString :: IO String
 randomString = (liftM (take (length target) . randomRs (' ', 'z')) newStdGen)             
 
+
 population :: Int
 population = 100
+
+maxGeneration :: Int
+maxGeneration = 100
+
+mutateRate :: IO Int
+mutateRate = getStdRandom (randomR (0, 50))
+
 
 initialPopulation :: [String]
 initialPopulation = unsafePerformIO (replicateM population randomString)   
@@ -35,6 +39,7 @@ fitnessValue (x:xs) (y:ys) = if x == y
                                 then (fitnessValue xs ys) + 1
                                 else fitnessValue xs ys
 
+                                
 -- gör en tuple av varje genom med dess fitness-värde
 fitness :: [String] -> [(String, Int)]
 fitness [] = []
@@ -42,21 +47,72 @@ fitness (x:xs) = [(x, (fitnessValue x target))] ++ fitness xs       --man kan k�
 
    
 -- välj ut de två individer med högst fitness    
-highestFitness :: [(String, Int)]            
-highestFitness = drop (population-2) (sortBy (compare `on` snd) (fitness initialPopulation))
+highestFitness :: [String] -> [(String, Int)]            
+highestFitness f = drop (population-2) (sortBy (compare `on` snd) (fitness f))
 
 
--- para de två individerna
 -- tuple to strings
---tupleToStrings :: [(a, b)] -> [a]
-firstTupleToString = (fst (head highestFitness))
-secondTupleToString = (fst (last highestFitness))
+fTTS :: [String] -> String
+fTTS x = (fst (head (highestFitness x)))
+
+sTTS :: [String] -> String
+sTTS x = (fst (last (highestFitness x)))
+
+
+randomLetter :: IO Char
+randomLetter =  (getStdRandom (randomR (' ', 'z')))
+
+-- mutera båda föräldrarna
+mutate :: [Char] -> [Char]
+mutate [] = []
+mutate (x:xs) = if (unsafePerformIO mutateRate == 0)
+                    then (unsafePerformIO randomLetter) : mutate xs
+                    else x : mutate xs
 
 
 randomInt :: IO Int
-randomInt = (getStdRandom (randomR (0, (length (target) - 1))))
+randomInt = getStdRandom (randomR (0, 1))
 
 
-mate :: String -> String -> String 
-mate g1 g2 = take n g1 ++ drop n g2
-    where n = unsafePerformIO (getStdRandom (randomR (1, (length (g1) - 1))))
+-- para båda föräldrarna
+mate :: String -> String -> String    
+mate _ [] = []
+mate [] _ = []
+mate (x:xs) (y:ys) = if (unsafePerformIO randomInt < 1)
+                        then (x : (mate (xs) (ys)))
+                        else (y : (mate (xs) (ys)))
+
+
+g 0 = initialPopulation
+g n =
+    let prev = g (n - 1)
+    in [(mutate (mate (fTTS prev) (sTTS prev))) | x <- [1..100]]  
+
+    
+    
+---------------------------------------------------       
+     
+main = do
+    putStrLn "\n Please enter a target string: "
+    string <- getLine
+    writeFile "targetString.txt" string
+    
+    contents <- readFile "targetString.txt"
+    evaluate (force contents)
+    
+    let 
+        nextGeneration prev = [(mutate (mate (fTTS prev) (sTTS prev))) | x <- [1..100]]
+        
+        goal gen genCount
+            | genCount >= maxGeneration = (["The maximum number of generations reached."], genCount)
+            | (gen) == [] = (["An error occured. Please try again."], genCount)
+            | goodEnough gen = ((filter (== target) gen), genCount)
+            | otherwise = goal (nextGeneration gen)(nextCount genCount)
+
+        goodEnough x = elem target (nextGeneration x)
+            
+        result = goal initialPopulation 0
+          
+        nextCount x = x + 1
+        
+    putStrLn ((show result))
