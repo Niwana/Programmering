@@ -36,7 +36,7 @@ samePlace :: (Eq a1, Num a) => [a1] -> [a1] -> a
 samePlace _ [] = 0
 samePlace [] _ = 0
 samePlace (x:xs) (y:ys)
-    | x == y = (samePlace xs ys) + (3 - 1) 
+    | x == y = (samePlace xs ys) + (2 - 1) 
     | otherwise = samePlace xs (ys)
                         
 -- kollar om rätt bokstav finns med över huvud taget
@@ -75,6 +75,11 @@ sTTS :: [String] -> String
 sTTS x = (fst (last (highestFitness x)))
 
 
+-- få ut fitness för den individ med mest fitness
+sTI :: [String] -> Int
+sTI x = (snd (last (highestFitness x)))
+
+
 randomLetter :: IO Char
 randomLetter =  (getStdRandom (randomR (' ', 'z')))
 
@@ -103,8 +108,8 @@ mate (x:xs) (y:ys) = if (unsafePerformIO randomInt < 1)
 
 
 main = do
-    if (unsafePerformIO $ doesFileExist "generations.txt")
-        then removeFile "generations.txt"
+    if (unsafePerformIO $ doesFileExist "results.txt")
+        then removeFile "results.txt"
         else return ()
     
     putStrLn "\n Please choose a target string: (ex. 'Hello world!')"
@@ -125,18 +130,22 @@ main = do
     option <- getLine
     writeFile "liveFeedback.temp" option
     
+    return ()
+    
     start
 
 -- Runs the algorithm    
 start = send initialPopulation 0
 
 send gen count = do
-    appendFile "generations.txt" (show (gen) ++ "\n")
+    appendFile "results.txt" ("Generation " ++ (show count) ++ ": " ++ (show gen) ++
+               ", Fitness: " ++ (show (sTI gen)) ++  "\n")
     let nextGeneration prev = [(mutate (mate (fTTS prev) (sTTS prev))) | x <- [1..population]]
     
         genCount c = c + 1
     
-    if (unsafePerformIO (readFile "liveFeedback.temp") == "1")
+    liveFeed <- readFile "liveFeedback.temp"
+    if (liveFeed == "1")
         then putStrLn (show (gen))   
         else return ()
         
@@ -144,12 +153,17 @@ send gen count = do
     
 recieve gen count = do
     if (elem target gen)
-        then do putStrLn (show gen)
-                appendFile "generations.txt" (show gen)
-                --putStrLn ("\n Final generation looked like: " ++ show gen)
-                putStrLn ("\n The target: " ++ (show target) ++  " was found at position: " ++ show (((findIndices (==target) gen) !! 0) + 1))
-                putStrLn  ("\n Number of generations: " ++ (show count))
-                putStrLn "\n Check the file 'generations.txt' in your directory to get all of the generations. \n"
+        then do appendFile "results.txt" ("Generation " ++ (show count) ++ ": " ++ (show gen) ++
+                           ", Fitness: " ++ (show (sTI gen)) ++  "\n")
+                appendFile "results.txt" ("\nThe target " ++ (show target) ++ 
+                           " was found at position " ++ show (((findIndices (==target) gen) !! 0) + 1) ++
+                           " in " ++ (show gen) ++ 
+                           " after " ++ (show count) ++ " generations.")
+                putStrLn ("\nThe target " ++ (show target) ++ 
+                           " was found at position " ++ show (((findIndices (==target) gen) !! 0) + 1) ++
+                           " in " ++ (show gen) ++ 
+                           " after " ++ (show count) ++ " generations.\n")
+                putStrLn "\nCheck the file 'results.txt' in your directory to get your results. \n"
                 removeFiles
         else send gen count
         
@@ -159,3 +173,4 @@ removeFiles = do
     removeFile "mutationRate.temp"
     removeFile "targetString.temp"
     removeFile "liveFeedback.temp"
+    
