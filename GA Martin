@@ -3,41 +3,57 @@ import Control.Monad.Random
 import System.IO.Unsafe
 import Data.List
 import Data.Function (on)
-
 import Control.DeepSeq
 import Control.Exception
+import System.Directory  
 
 type Gene = String
 
+-- Declare some values
 target :: Gene
-target = unsafePerformIO (readFile "targetString.txt")
-    
-    
-randomString :: IO String
-randomString = (liftM (take (length target) . randomRs (' ', 'z')) newStdGen)             
-
-
+target = unsafePerformIO (readFile "targetString.temp")
+               
 population :: Int
-population = 100
-
-maxGeneration :: Int
-maxGeneration = 100
+population = read (unsafePerformIO (readFile "populationSize.temp"))
 
 mutateRate :: IO Int
-mutateRate = getStdRandom (randomR (0, 50))
+mutateRate = getStdRandom (randomR (0, (div 100 (length [1..(read (unsafePerformIO (readFile "mutationRate.temp")))]))))
+
+maxGeneration :: Int
+maxGeneration = 2000
+
+
+randomString :: IO String
+randomString = (liftM (take (length target) . randomRs (' ', 'z')) newStdGen)  
 
 
 initialPopulation :: [String]
 initialPopulation = unsafePerformIO (replicateM population randomString)   
 
 
--- kollar om en bokstav är på rätt plats
-fitnessValue :: String -> String -> Int
-fitnessValue [] _ = 0
+-- kollar om rätt bokstav är på rätt plats
+samePlace :: (Eq a1, Num a) => [a1] -> [a1] -> a
+samePlace _ [] = 0
+samePlace [] _ = 0
+samePlace (x:xs) (y:ys)
+    | x == y = (samePlace xs ys) + (3 - 1) 
+    | otherwise = samePlace xs (ys)
+                        
+-- kollar om rätt bokstav finns med över huvud taget
+notSamePlace [] _ = 0
+notSamePlace _ [] = 0
+notSamePlace (x:xs) (ys)
+    | elem x (ys) = (notSamePlace xs ys) + 1
+    | otherwise = (notSamePlace xs ys)
+
+-- beräknar fitness-värdet. +2 för samma bokstav på samma plats. +1 för samma bokstav
+fitnessValue :: Eq a => [a] -> [a] -> Int
 fitnessValue _ [] = 0
-fitnessValue (x:xs) (y:ys) = if x == y
-                                then (fitnessValue xs ys) + 1
-                                else fitnessValue xs ys
+fitnessValue [] _ = 0
+fitnessValue (x:xs) (y:ys) = notSamePlace (x:xs) (y:ys) + if (x == y) 
+                                                            then (samePlace (x:xs) (y:ys)) 
+                                                            else samePlace xs ys
+                                                        
 
                                 
 -- gör en tuple av varje genom med dess fitness-värde
@@ -80,39 +96,66 @@ mate _ [] = []
 mate [] _ = []
 mate (x:xs) (y:ys) = if (unsafePerformIO randomInt < 1)
                         then (x : (mate (xs) (ys)))
-                        else (y : (mate (xs) (ys)))
+                        else (y : (mate (xs) (ys)))  
 
-
-g 0 = initialPopulation
-g n =
-    let prev = g (n - 1)
-    in [(mutate (mate (fTTS prev) (sTTS prev))) | x <- [1..100]]  
-
-    
-    
+        
 ---------------------------------------------------       
-     
-main = do
-    putStrLn "\n Please enter a target string: "
-    string <- getLine
-    writeFile "targetString.txt" string
-    
-    contents <- readFile "targetString.txt"
-    evaluate (force contents)
-    
-    let 
-        nextGeneration prev = [(mutate (mate (fTTS prev) (sTTS prev))) | x <- [1..100]]
-        
-        goal gen genCount
-            | genCount >= maxGeneration = (["The maximum number of generations reached."], genCount)
-            | (gen) == [] = (["An error occured. Please try again."], genCount)
-            | goodEnough gen = ((filter (== target) gen), genCount)
-            | otherwise = goal (nextGeneration gen)(nextCount genCount)
 
-        goodEnough x = elem target (nextGeneration x)
-            
-        result = goal initialPopulation 0
-          
-        nextCount x = x + 1
+
+main = do
+    if (unsafePerformIO $ doesFileExist "generations.txt")
+        then removeFile "generations.txt"
+        else return ()
+    
+    putStrLn "\n Please choose a target string: (ex. 'Hello world!')"
+    target <- getLine
+    writeFile "targetString.temp" target
+    
+    putStrLn "\n Choose the size of the population (ex. '50')"
+    size <- getLine
+    writeFile "populationSize.temp" size
+
+    putStrLn "\n Choose the mutation rate in percent (ex. '2')"
+    mutationRate <- getLine
+    writeFile "mutationRate.temp" mutationRate
+    
+    putStrLn "\n Do you want live feedback?"
+    putStrLn "1) Yes"
+    putStrLn "2) No"
+    option <- getLine
+    writeFile "liveFeedback.temp" option
+    
+    start
+
+-- Runs the algorithm    
+start = send initialPopulation 0
+
+send gen count = do
+    appendFile "generations.txt" (show (gen) ++ "\n")
+    let nextGeneration prev = [(mutate (mate (fTTS prev) (sTTS prev))) | x <- [1..population]]
+    
+        genCount c = c + 1
+    
+    if (unsafePerformIO (readFile "liveFeedback.temp") == "1")
+        then putStrLn (show (gen))   
+        else return ()
         
-    putStrLn ((show result))
+    recieve (nextGeneration gen) (genCount count) 
+    
+recieve gen count = do
+    if (elem target gen)
+        then do putStrLn (show gen)
+                appendFile "generations.txt" (show gen)
+                --putStrLn ("\n Final generation looked like: " ++ show gen)
+                putStrLn ("\n The target: " ++ (show target) ++  " was found at position: " ++ show (((findIndices (==target) gen) !! 0) + 1))
+                putStrLn  ("\n Number of generations: " ++ (show count))
+                putStrLn "\n Check the file 'generations.txt' in your directory to get all of the generations. \n"
+                removeFiles
+        else send gen count
+        
+
+removeFiles = do
+    removeFile "populationSize.temp"
+    removeFile "mutationRate.temp"
+    removeFile "targetString.temp"
+    removeFile "liveFeedback.temp"
