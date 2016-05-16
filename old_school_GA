@@ -1,0 +1,85 @@
+import Control.Monad (liftM, replicateM)
+import Control.Monad.Random
+import Data.Function (on)
+import Data.List 
+import System.IO.Unsafe
+import Control.DeepSeq
+import Control.Exception
+
+randomString :: Int -> IO String
+randomString x = (liftM (take x . randomRs (' ', '~')) newStdGen)     
+
+generations :: Int -> Int -> IO [String]
+generations po le = replicateM po (randomString (le))
+
+startGen :: Int -> Int -> [String]
+startGen po le = unsafePerformIO (generations po le) 
+
+goodOrNot :: String -> String -> Int
+goodOrNot _ [] = 0
+goodOrNot [] _ = 0
+goodOrNot (x:xs) (y:ys) = if x /= y then 1 + (goodOrNot xs ys) else (goodOrNot xs ys)
+
+values :: [String] -> String -> [Int]
+values [] _ = []
+values (x:xs) ta = (goodOrNot x ta) : (values xs ta)
+
+valueTuples :: [String] -> String -> [(String, Int)] 
+valueTuples x ta = 
+    sortBy (compare `on` snd) (zip x (values x ta))
+
+progenitor ta po mu le = do 
+    writeFile "progress.txt" ("Target = " ++ ta ++ "\nPopulation = " ++ (show po) ++ "\nMutationfactor = " ++ (show mu) ++ " promille\n" )
+    writeFile "genCount.temp" (show 0)
+    newParentToTemp (startGen po le) 1 ta po mu le
+    
+newParentToTemp x n ta po mu le = do 
+    recordBest x n ta
+    writeFile "fst.temp" (fst (head( take 1 (valueTuples x ta))))
+    writeFile "snd.temp" (fst (head ( take 1 (drop 1 (valueTuples x ta)))))
+    if (head (map snd (take 1 (valueTuples x ta)))) == 0 then do ok n ta 
+    else newParentToTemp (descendant po mu le) (n+1) ta po mu le
+        
+recordBest x n ta = do appendFile "progress.txt" ("\n" ++ (show n) ++ ". " ++ (fst (head(take 1 (valueTuples x ta)))) ++ " (" ++ (show (head (map snd (take 1 (valueTuples x ta))))) ++ " fel)")
+    
+randomLetter = (getStdRandom (randomR (' ', '~')))
+randomPromille = getStdRandom (randomR (0, (length [1..1000])))
+randomParent le = getStdRandom (randomR (0, (length [1..(le -1)])))
+
+descendant :: Int -> Int -> Int -> [String]
+descendant 0 _ _ = []
+descendant 1 _ _ = []
+descendant po mu le = (mate (unsafePerformIO firstp) (unsafePerformIO secondp) mu le) : ((mate (unsafePerformIO secondp) (unsafePerformIO firstp) mu le) : (descendant (po-2) mu le))
+                 
+firstp = do 
+    firstp <- readFile "fst.temp"
+    evaluate (force firstp)
+
+secondp = do
+    secondp <- readFile "snd.temp"
+    evaluate (force secondp)
+
+mate :: [Char] -> [Char] -> Int -> Int -> [Char]
+mate (xs) (ys) mu le = mutate ((take z xs) ++ (drop z ys)) mu
+                        where z = do unsafeDupablePerformIO (randomParent le)
+    
+mutate :: [Char] -> Int -> [Char]
+mutate [] _ = [] 
+mutate (x:xs) mu = if mu >= (do unsafeDupablePerformIO randomPromille) then (do unsafeDupablePerformIO randomLetter) : (mutate (xs) mu) else x : (mutate (xs) mu)
+
+ok n ta = do
+    putStrLn ( "\nIt took " ++ (show n) ++ " generations to reach the target " ++ (show ta) ++ ".\nPlease read progress.txt in the program folder to follow the evolution.")
+    ehe <- getLine
+    putStrLn ehe
+
+-----------------------------------------------------------------------------
+
+main = do
+    putStrLn "target string: "
+    ta <- getLine
+    po <- prompt "batch size / population: "
+    mu <- prompt "probability of mutation (per thousand): "
+    progenitor ta (po) (mu) (length (ta))
+
+prompt :: (Read a) => String -> IO a
+prompt s = putStrLn s >> getLine >>= return . read
