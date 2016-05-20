@@ -6,12 +6,12 @@ import System.IO.Unsafe
 import Control.DeepSeq
 import Control.Exception
 
--------------------------------------------
+-------- för att få getLine till Int ----------
 
 prompt :: (Read a) => String -> IO a
 prompt s = putStrLn s >> getLine >>= return . read
 
------------------------------------------
+---------- main skickar användardata till progenitor ("urförälder") ------------
 
 main = do
     putStrLn "target string: "
@@ -20,13 +20,13 @@ main = do
     mu <- prompt "probability of mutation (per thousand): "
     progenitor ta (po) (mu) (length (ta))
     
-------------------------------------------
+--------- som skriver användardata till filen progress.txt, skapar en urpopulation med startGen som skickas till newParentToTemp ----------
 
 progenitor ta po mu le = do 
     writeFile "progress.txt" ("Target = " ++ ta ++ "\nPopulation = " ++ (show po) ++ "\nMutationfactor = " ++ (show mu) ++ " promille\n" )
     newParentToTemp (startGen po le) 1 ta po mu le
     
-------------------------------------------
+------------- genererar en lista av (population många) slumpsträngar lika långa som target -------------
 
 startGen :: Int -> Int -> [String]
 startGen po le = unsafePerformIO (generations po le) 
@@ -37,20 +37,21 @@ generations po le = replicateM po (randomString (le))
 randomString :: Int -> IO String
 randomString x = (liftM (take x . randomRs (' ', '~')) newStdGen) 
 
-------------------------------------------
-    
+----- skickar lista med med strings till recordBest, skriver med hjälp av sortering och  funktionen valueTuples bästa och näst bästa till tempfiler -------
+----- om den bästa tuplen är samma som target körs funktionen "ok" annars körs funktionen igen med data från funktionen descendant som input -----   
+   
 newParentToTemp x n ta po mu le = do 
     recordBest x n ta
     writeFile "fst.temp" (fst (head( take 1 (valueTuples x ta))))
     writeFile "snd.temp" (fst (head ( take 1 (drop 1 (valueTuples x ta)))))
-    if (head (map snd (take 1 (valueTuples x ta)))) == 0 then do ok n ta 
+    if (head (map snd (take 1 (valueTuples x ta)))) == 0 then do ok n ta
     else newParentToTemp (descendant po mu le) (n+1) ta po mu le
     
-------------------------------------------
+--------- lägger till en rad i progress.txt med generation, bästa String i generation, och fitness-värde (antal fel -----------
         
 recordBest x n ta = do appendFile "progress.txt" ("\n" ++ (show n) ++ ". " ++ (fst (head(take 1 (valueTuples x ta)))) ++ " (" ++ (show (head (map snd (take 1 (valueTuples x ta))))) ++ " fel)")
  
-------------------------------------------
+----- gör om lista med Strings till lista med Tuples av String och fitness (Int repr. antal fel ------
 
 valueTuples :: [String] -> String -> [(String, Int)] 
 valueTuples x ta = 
@@ -65,7 +66,7 @@ goodOrNot _ [] = 0
 goodOrNot [] _ = 0
 goodOrNot (x:xs) (y:ys) = if x /= y then 1 + (goodOrNot xs ys) else (goodOrNot xs ys)
 
-------------------------------------------
+----------- läser tempfiler för bästa och näst bästa och skickar skapar (via funktionerna mate och mutate) en lista med (population många) crossover-strings -------------------------------
 
 descendant :: Int -> Int -> Int -> [String]
 descendant 0 _ _ = []
@@ -80,13 +81,15 @@ secondp = do
     secondp <- readFile "snd.temp"
     evaluate (force secondp)
 
------------------------------------------    
+------- gör en crossover som skickas till mutate ---------
     
 mate :: [Char] -> [Char] -> Int -> Int -> [Char]
 mate (xs) (ys) mu le = mutate ((take z xs) ++ (drop z ys)) mu
                         where z = do unsafeDupablePerformIO (randomParent le)
                         
 randomParent le = getStdRandom (randomR (1, (le -1)))                        
+    
+------- går rekursivt igenom en strings tecken och om ett slumptal inte överskrider en gräns  ersätts tecknet med ett slumptecken ---------      
     
 mutate :: [Char] -> Int -> [Char]
 mutate [] _ = [] 
@@ -96,7 +99,7 @@ randomPromille = getStdRandom (randomR (0, 1000))
 
 randomLetter = (getStdRandom (randomR (' ', '~')))
 
---------------------------------
+------- skapar ett summerande meddelande när target-String är mött --------
 
 ok n ta = do
     putStrLn ( "\nIt took " ++ (show n) ++ " generations to reach the target " ++ (show ta) ++ ".\nPlease read progress.txt in the program folder to follow the evolution.")
